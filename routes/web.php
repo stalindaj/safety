@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MishapController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SetupController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/mishaps', [MishapController::class, 'store'])->name('mishaps.store');
     Route::put('/mishaps/{mishap}', [MishapController::class, 'update'])->name('mishaps.update');
     Route::delete('/mishaps/{mishap}', [MishapController::class, 'destroy'])->name('mishaps.destroy');
+
+    // Account — change your own password.
+    Route::get('/account', [ProfileController::class, 'edit'])->name('account.edit');
+    Route::put('/account/password', [ProfileController::class, 'updatePassword'])->name('account.password');
 });
 
 // One-time browser installer — there is no SSH/terminal on the production host.

@@ -119,10 +119,12 @@ export default function AppLayout({ children }) {
                         <Clock />
 
                         <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
-                            <div className="text-right">
+                            <Link href="/account" className="group text-right" title="Account & password">
                                 <p className="label-mono !text-[0.6rem]">User</p>
-                                <p className="font-mono text-sm text-navy-800">{auth?.user?.display_name}</p>
-                            </div>
+                                <p className="font-mono text-sm text-navy-800 group-hover:text-navy-600">
+                                    {auth?.user?.display_name}
+                                </p>
+                            </Link>
                             <button
                                 type="button"
                                 title="Sign out"

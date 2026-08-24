@@ -49,7 +49,8 @@ Then sign in at <http://localhost:8000/login>.
 | --- | --- | --- |
 | `superadmin@15sw.paf.mil.ph` | `ChangeMe!2026` | admin |
 
-Change the password from the profile screen the moment you go live.
+Change it the moment you go live — sign in, click your name (top-right) to open
+the **Account** screen, and set a new password.
 For iterative work run `npm run dev` alongside `php artisan serve`.
 
 ---

@@ -174,17 +174,10 @@ SESSION_SECURE_COOKIE=true
 Doing this before the certificate exists locks you out — the secure cookie is
 never sent over plain HTTP, so login silently fails.
 
-### 2.10 Raise upload limits
+### 2.10 (optional) PHP limits
 
-cPanel → **MultiPHP INI Editor** → select the domain
-
-```
-upload_max_filesize = 8M
-post_max_size = 10M
-```
-
-Trainee ID photos are capped at 4 MB by validation; these give headroom for
-the multipart envelope.
+This app has no file uploads, so the stock cPanel PHP limits are fine. No
+MultiPHP INI changes are required.
 
 ---
 
@@ -237,15 +230,13 @@ You get "500 Server Error" and nothing else while `APP_DEBUG=false`.
 - [ ] `SETUP_TOKEN` blank
 - [ ] Certificate issued, `FORCE_HTTPS=true`, `SESSION_SECURE_COOKIE=true`
 - [ ] `https://yourdomain.com/mishaps/.env` returns 403
-- [ ] Both seeded accounts' passwords changed from `ChangeMe!2026`
+- [ ] Superadmin password changed from `ChangeMe!2026`
 - [ ] Database user has privileges on this database only
 
-### Seeded accounts
+### Seeded account
 
 | Email | Role | Password |
 | --- | --- | --- |
 | `superadmin@15sw.paf.mil.ph` | admin | `ChangeMe!2026` |
-| `instructor@15sw.paf.mil.ph` | staff | `ChangeMe!2026` |
 
-Change both on day one. They exist so you can get in after the installer runs,
-nothing more.
+Change it on day one. It exists only so you can get in after the installer runs.
