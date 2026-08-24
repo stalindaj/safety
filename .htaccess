@@ -1,0 +1,29 @@
+# ---------------------------------------------------------------------------
+# Repo root deny-all.
+#
+# On this host every document root lives under public_html, which means the
+# whole repository — .env, storage/, vendor/ — sits inside the web tree. Only
+# public/ is meant to be reachable, and public/.htaccess re-allows itself.
+# Do not delete this file.
+# ---------------------------------------------------------------------------
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>
+
+# Belt and braces: never serve these, whatever the directory rules say.
+<FilesMatch "(?i)(^\.env|^\.env\..*|^composer\.(json|lock)$|^package(-lock)?\.json$|^artisan$|\.log$|\.sqlite$|\.md$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+Options -Indexes

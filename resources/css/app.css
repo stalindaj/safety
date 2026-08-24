@@ -1,0 +1,121 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.jsx';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+    --font-display: 'Barlow Condensed', 'Inter', ui-sans-serif, sans-serif;
+
+    /* Theme: blue + yellow on white.
+       NOTE: the scale is still *named* `navy` (blue family) and `gold`
+       (yellow family) so every component's utility classes keep working —
+       only the values changed. Re-skin the whole app from right here. */
+
+    /* Blue family (primary — text, nav, buttons, links) */
+    --color-navy-50: #eff6ff;
+    --color-navy-100: #dbeafe;
+    --color-navy-200: #bfdbfe;
+    --color-navy-300: #93c5fd;
+    --color-navy-400: #60a5fa;
+    --color-navy-500: #3b82f6;
+    --color-navy-600: #2563eb;
+    --color-navy-700: #1d4ed8;
+    --color-navy-800: #1e40af;
+    --color-navy-900: #1e3a8a;
+    --color-navy-950: #172554;
+
+    /* Yellow family (accent — highlights, pills, the accent bar) */
+    --color-gold-50: #fefce8;
+    --color-gold-100: #fef9c3;
+    --color-gold-200: #fef08a;
+    --color-gold-300: #fde047;
+    --color-gold-400: #facc15;
+    --color-gold-500: #eab308;
+    --color-gold-600: #ca8a04;
+    --color-gold-700: #a16207;
+    --color-gold-800: #854d0e;
+    --color-gold-900: #713f12;
+}
+
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        background-color: var(--color-slate-100);
+        color: var(--color-navy-900);
+    }
+}
+
+@layer components {
+    /* Small uppercase mono label — the system's connective tissue. */
+    .label-mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-slate-500);
+    }
+
+    .panel {
+        background-color: #fff;
+        border: 1px solid var(--color-slate-200);
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    }
+
+    .field {
+        width: 100%;
+        border: 1px solid var(--color-slate-300);
+        border-radius: 0.375rem;
+        background-color: #fff;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: var(--color-navy-900);
+    }
+
+    .field:focus {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        border-color: var(--color-navy-500);
+        box-shadow: 0 0 0 3px var(--color-navy-100);
+    }
+
+    .field:disabled {
+        background-color: var(--color-slate-100);
+        color: var(--color-slate-500);
+    }
+}
+
+/* A4 exam printing — one paper, no chrome. */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: #fff;
+    }
+
+    .print-sheet {
+        box-shadow: none !important;
+        border: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+    }
+
+    .print-break {
+        break-after: page;
+    }
+}
+
+@page {
+    size: A4;
+    margin: 16mm 14mm;
+}

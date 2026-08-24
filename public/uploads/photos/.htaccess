@@ -1,0 +1,9 @@
+# Serve uploaded ID photos as inert files only.
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phps
+AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .php8 .phps
+
+Options -ExecCGI -Indexes
