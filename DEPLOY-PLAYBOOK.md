@@ -1,4 +1,4 @@
-# DEPLOY PLAYBOOK — 15SW Mishap Records
+# DEPLOY PLAYBOOK — 15SW Safety
 
 Deploying to cPanel shared hosting with **no SSH, no Composer, no Node** on the
 server. Everything here was learned the hard way on a previous deploy; follow
@@ -97,7 +97,7 @@ cPanel → **File Manager** → `public_html/mishaps/.env`
 Copy `.env.example` and set:
 
 ```dotenv
-APP_NAME="15SW Mishap Records"
+APP_NAME="15SW Safety"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://mishaps.yourdomain.com

@@ -26,7 +26,7 @@ export default function Login() {
                             Republic of the Philippines · Philippine Air Force
                         </p>
                         <h1 className="font-display text-xl leading-tight font-bold tracking-wide text-navy-900 uppercase">
-                            15SW Mishap Records
+                            15SW Safety
                         </h1>
                         <p className="label-mono !text-[0.6rem]">15th Strike Wing — Wing Safety Office</p>
                     </div>
@@ -77,7 +77,7 @@ export default function Login() {
                 </form>
 
                 <p className="label-mono mt-5 text-center !text-[0.6rem]">
-                    15SW Mishap Records v1.0 · For official safety use only
+                    15SW Safety v1.0 · For official safety use only
                 </p>
             </div>
         </div>

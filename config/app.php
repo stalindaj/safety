@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', '15SW Mishap Records'),
+    'name' => env('APP_NAME', '15SW Safety'),
 
     /*
     |--------------------------------------------------------------------------

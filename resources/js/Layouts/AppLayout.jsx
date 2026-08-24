@@ -103,7 +103,7 @@ export default function AppLayout({ children }) {
                                 Republic of the Philippines · Philippine Air Force
                             </p>
                             <h1 className="font-display truncate text-lg leading-tight font-bold tracking-wide text-navy-900 uppercase sm:text-xl">
-                                15SW Mishap Records
+                                15SW Safety
                             </h1>
                             <p className="label-mono !text-[0.6rem] truncate">{app?.unit}</p>
                         </div>
@@ -156,7 +156,7 @@ export default function AppLayout({ children }) {
                 </main>
 
                 <footer className="label-mono !text-[0.6rem] px-6 py-6 text-center">
-                    15SW Mishap Records v1.0 · For official safety use only · 15th Strike Wing, Philippine Air Force
+                    15SW Safety v1.0 · For official safety use only · 15th Strike Wing, Philippine Air Force
                 </footer>
             </div>
         </div>

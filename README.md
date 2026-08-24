@@ -1,12 +1,13 @@
-# 15SW Mishap Records
+# 15SW Safety
 
-**Mishap records & safety dashboard**
-15th Strike Wing — Wing Safety Office, Philippine Air Force
+**15th Strike Wing — Wing Safety Office, Philippine Air Force**
 
-Captures every reported mishap — its **accident/incident** classification and
-**ground/flight** environment — in one searchable log, and rolls the history up
-into a dashboard (yearly trend, ground-vs-flight split, monthly breakdown, top
-locations). Ships seeded with the CY 2016–2026 historical record.
+The wing's safety system. **Mishap Records** is the first module: it captures
+every reported mishap — its **accident/incident** classification, **ground/flight**
+environment, and **cause** — in one searchable log, and rolls the history up into
+a dashboard (key findings, cause breakdown, a Philippines map of locations, and
+trend charts). Ships seeded with the CY 2016–2026 historical record. More safety
+modules are planned.
 
 > **Planned:** AI-assisted drafting of *corrective action* and *lesson learned*
 > from a mishap's description. The columns and form fields already exist (the
