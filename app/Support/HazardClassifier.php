@@ -35,6 +35,27 @@ class HazardClassifier
 
     public const OTHER = 'Other / mechanical';
 
+    /**
+     * The canonical cause list for the intake dropdown and validation, ordered
+     * roughly by how often it shows up in the record. Must stay in sync with the
+     * RULES keys above (plus OTHER) — every value primary() can return is here.
+     *
+     * @var list<string>
+     */
+    public const CATEGORIES = [
+        'Vehicle / road collision',
+        'Bird / wildlife strike',
+        'Engine / powerplant',
+        'Landing gear / tire / brake',
+        'Canopy / door detachment',
+        'Weapon / armament',
+        'Kite / wire strike',
+        'Hard / precautionary landing',
+        'Fall / personnel injury',
+        'Fire',
+        self::OTHER,
+    ];
+
     /** The single most likely cause for one description. */
     public static function primary(?string $description): string
     {

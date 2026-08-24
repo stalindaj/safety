@@ -14,6 +14,7 @@ function MishapForm({ mishap, options, onDone }) {
         location: mishap?.location ?? '',
         mishap_type: mishap?.mishap_type ?? 'incident',
         environment: mishap?.environment ?? 'ground',
+        cause: mishap?.cause ?? '',
         description: mishap?.description ?? '',
         corrective_action: mishap?.corrective_action ?? '',
         lesson_learned: mishap?.lesson_learned ?? '',
@@ -85,6 +86,21 @@ function MishapForm({ mishap, options, onDone }) {
                     </select>
                 </Field>
             </div>
+
+            <Field label="Cause / Hazard Type" error={errors.cause}>
+                <select
+                    className="field"
+                    value={data.cause}
+                    onChange={(e) => setData('cause', e.target.value)}
+                >
+                    <option value="">Auto-detect from description</option>
+                    {options.causes.map((c) => (
+                        <option key={c} value={c}>
+                            {c}
+                        </option>
+                    ))}
+                </select>
+            </Field>
 
             <Field label="Description" error={errors.description}>
                 <textarea
@@ -245,6 +261,21 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                             ))}
                         </select>
                     </label>
+                    <label className="block">
+                        <span className="label-mono mb-1 block">Cause</span>
+                        <select
+                            className="field !py-1.5"
+                            value={filters.cause ?? ''}
+                            onChange={(e) => applyFilter({ cause: e.target.value || null })}
+                        >
+                            <option value="">All causes</option>
+                            {options.causes.map((c) => (
+                                <option key={c} value={c}>
+                                    {c}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
                     <label className="block flex-1 min-w-48">
                         <span className="label-mono mb-1 block">Search</span>
                         <input
@@ -261,7 +292,7 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                     <EmptyState>No mishap records match these filters.</EmptyState>
                 ) : (
                     <div className="p-2 sm:p-3">
-                        <Table head={['Date', 'Location', 'Type', 'Environment', 'Description', '']}>
+                        <Table head={['Date', 'Location', 'Type', 'Environment', 'Cause', 'Description', '']}>
                             {mishaps.data.map((m) => (
                                 <tr key={m.id} className="align-top hover:bg-slate-50">
                                     <td className="px-3 py-2.5 font-mono text-xs whitespace-nowrap text-navy-800">
@@ -273,6 +304,9 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                                     </td>
                                     <td className="px-3 py-2.5">
                                         <Badge tone={ENV_TONE[m.environment]}>{m.environment}</Badge>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-xs whitespace-nowrap text-slate-600">
+                                        {m.cause ?? '—'}
                                     </td>
                                     <td className="max-w-md px-3 py-2.5 text-sm text-slate-600">
                                         <button

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mishap;
+use App\Support\HazardClassifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -26,6 +27,7 @@ class MishapController extends Controller
             'year' => $request->integer('year') ?: null,
             'type' => in_array($request->input('type'), Mishap::TYPES, true) ? $request->input('type') : null,
             'environment' => in_array($request->input('environment'), Mishap::ENVIRONMENTS, true) ? $request->input('environment') : null,
+            'cause' => in_array($request->input('cause'), HazardClassifier::CATEGORIES, true) ? $request->input('cause') : null,
             'search' => trim((string) $request->input('search')) ?: null,
         ];
 
@@ -34,6 +36,7 @@ class MishapController extends Controller
             ->when($filters['year'], fn ($q, $year) => $q->forYear($year))
             ->when($filters['type'], fn ($q, $type) => $q->where('mishap_type', $type))
             ->when($filters['environment'], fn ($q, $env) => $q->where('environment', $env))
+            ->when($filters['cause'], fn ($q, $cause) => $q->where('cause', $cause))
             ->when($filters['search'], fn ($q, $term) => $q->where(
                 fn ($w) => $w->where('description', 'like', "%{$term}%")
                     ->orWhere('location', 'like', "%{$term}%"),
@@ -49,6 +52,7 @@ class MishapController extends Controller
             'options' => [
                 'types' => Mishap::TYPES,
                 'environments' => Mishap::ENVIRONMENTS,
+                'causes' => HazardClassifier::CATEGORIES,
             ],
         ]);
     }
@@ -77,15 +81,24 @@ class MishapController extends Controller
     /** @return array<string, mixed> */
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'mishap_date' => ['required', 'date'],
             'location' => ['nullable', 'string', 'max:190'],
             'mishap_type' => ['required', Rule::in(Mishap::TYPES)],
             'environment' => ['required', Rule::in(Mishap::ENVIRONMENTS)],
+            'cause' => ['nullable', Rule::in(HazardClassifier::CATEGORIES)],
             'description' => ['required', 'string'],
             'corrective_action' => ['nullable', 'string'],
             'lesson_learned' => ['nullable', 'string'],
         ]);
+
+        // Left on "auto-detect"? Infer the cause from the description so the
+        // record is never blank and the analysis stays complete.
+        if (empty($data['cause'])) {
+            $data['cause'] = HazardClassifier::primary($data['description']);
+        }
+
+        return $data;
     }
 
     /** @return array<string, mixed> */
@@ -98,6 +111,7 @@ class MishapController extends Controller
             'location' => $m->location,
             'mishap_type' => $m->mishap_type,
             'environment' => $m->environment,
+            'cause' => $m->cause,
             'description' => $m->description,
             'corrective_action' => $m->corrective_action,
             'lesson_learned' => $m->lesson_learned,

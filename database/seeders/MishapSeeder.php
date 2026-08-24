@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Mishap;
+use App\Support\HazardClassifier;
 use Illuminate\Database\Seeder;
 
 /**
@@ -24,6 +25,7 @@ class MishapSeeder extends Seeder
                 [
                     'mishap_type' => $r['type'],
                     'environment' => $r['env'],
+                    'cause' => HazardClassifier::primary($r['desc']),
                 ],
             );
         }

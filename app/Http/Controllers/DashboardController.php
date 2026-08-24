@@ -14,7 +14,7 @@ class DashboardController extends Controller
     public function __invoke(): Response
     {
         /** @var Collection<int, Mishap> $all */
-        $all = Mishap::query()->get(['mishap_date', 'location', 'mishap_type', 'environment', 'description']);
+        $all = Mishap::query()->get(['mishap_date', 'location', 'mishap_type', 'environment', 'cause', 'description']);
 
         $total = $all->count();
         $currentYear = (int) now()->year;
@@ -62,7 +62,14 @@ class DashboardController extends Controller
             return [];
         }
 
-        return collect(HazardClassifier::tally($all->pluck('description')))
+        // Prefer the cause chosen/stored on each record; fall back to inferring
+        // from the description only for anything not yet classified.
+        $counts = $all
+            ->groupBy(fn (Mishap $m) => $m->cause ?: HazardClassifier::primary($m->description))
+            ->map->count()
+            ->sortDesc();
+
+        return $counts
             ->map(fn (int $count, string $label) => [
                 'label' => $label,
                 'count' => $count,

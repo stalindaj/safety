@@ -1,14 +1,14 @@
 {
-  "_AppLayout-Bcuo8ZVg.js": {
-    "file": "assets/AppLayout-Bcuo8ZVg.js",
+  "_AppLayout-Du_z_EPC.js": {
+    "file": "assets/AppLayout-Du_z_EPC.js",
     "name": "AppLayout",
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-DzVzSgly.js"
+      "_Ui-DTeOM5aa.js"
     ]
   },
-  "_Ui-DzVzSgly.js": {
-    "file": "assets/Ui-DzVzSgly.js",
+  "_Ui-DTeOM5aa.js": {
+    "file": "assets/Ui-DTeOM5aa.js",
     "name": "Ui",
     "imports": [
       "resources/js/app.jsx"
@@ -24,62 +24,62 @@
     ]
   },
   "resources/js/Pages/Account/Edit.jsx": {
-    "file": "assets/Edit-TsZz9-_r.js",
+    "file": "assets/Edit-DH1xKnAx.js",
     "name": "Edit",
     "src": "resources/js/Pages/Account/Edit.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-Bcuo8ZVg.js",
-      "_Ui-DzVzSgly.js"
+      "_AppLayout-Du_z_EPC.js",
+      "_Ui-DTeOM5aa.js"
     ],
     "css": [
       "assets/app-Ckw216VY.css"
     ]
   },
   "resources/js/Pages/Auth/Login.jsx": {
-    "file": "assets/Login-CI7Ct7sJ.js",
+    "file": "assets/Login-D7HHkj0s.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-DzVzSgly.js"
+      "_Ui-DTeOM5aa.js"
     ],
     "css": [
       "assets/app-Ckw216VY.css"
     ]
   },
   "resources/js/Pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-CLVDH1n8.js",
+    "file": "assets/Dashboard-D6PWEBkU.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Dashboard.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-Bcuo8ZVg.js",
-      "_Ui-DzVzSgly.js"
+      "_AppLayout-Du_z_EPC.js",
+      "_Ui-DTeOM5aa.js"
     ],
     "css": [
       "assets/app-Ckw216VY.css"
     ]
   },
   "resources/js/Pages/Mishaps/Index.jsx": {
-    "file": "assets/Index-CHikTrge.js",
+    "file": "assets/Index-D4l_JfG1.js",
     "name": "Index",
     "src": "resources/js/Pages/Mishaps/Index.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-Bcuo8ZVg.js",
-      "_Ui-DzVzSgly.js"
+      "_AppLayout-Du_z_EPC.js",
+      "_Ui-DTeOM5aa.js"
     ],
     "css": [
       "assets/app-Ckw216VY.css"
     ]
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-C56ZiCNU.js",
+    "file": "assets/app-CrGEdOl2.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
