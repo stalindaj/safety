@@ -44,6 +44,9 @@ class DashboardController extends Controller
             'monthly' => $this->monthly($all, $currentYear),
             'monthly_year' => $currentYear,
             'top_locations' => $this->topLocations($all),
+            'all_locations' => $this->allLocations($all),
+            'location_details' => $this->locationDetails($all),
+            'unlocated' => $all->whereNull('location')->count(),
         ]);
     }
 
@@ -220,11 +223,36 @@ class DashboardController extends Controller
     /** Top 5 locations by all-time mishap count. */
     private function topLocations(Collection $all): array
     {
+        return array_slice($this->allLocations($all), 0, 5);
+    }
+
+    /**
+     * Per-location mishap list (newest first) for the map click-through modal.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    private function locationDetails(Collection $all): array
+    {
+        return $all->whereNotNull('location')
+            ->sortByDesc('mishap_date')
+            ->groupBy('location')
+            ->map(fn (Collection $group) => $group->map(fn (Mishap $m) => [
+                'date' => $m->mishap_date->format('d M Y'),
+                'type' => $m->mishap_type,
+                'environment' => $m->environment,
+                'cause' => $m->cause,
+                'description' => $m->description,
+            ])->values()->all())
+            ->all();
+    }
+
+    /** Every location by all-time mishap count, biggest first. */
+    private function allLocations(Collection $all): array
+    {
         return $all->whereNotNull('location')
             ->groupBy('location')
             ->map->count()
             ->sortDesc()
-            ->take(5)
             ->map(fn (int $count, string $location) => ['location' => $location, 'total' => $count])
             ->values()
             ->all();

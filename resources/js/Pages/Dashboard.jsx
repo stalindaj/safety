@@ -14,9 +14,11 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Panel } from '@/Components/Ui';
+import { Badge, Modal, Panel } from '@/Components/Ui';
 import { AlertIcon, CheckIcon } from '@/Components/Icons';
+import PhilippinesMap from '@/Components/PhilippinesMap';
 
 const NAVY = '#1d4ed8'; // blue — lines & bars
 const GOLD = '#eab308'; // yellow — monthly bars & highlight
@@ -91,6 +93,44 @@ function HazardBar({ label, count, pct, max, highlight }) {
     );
 }
 
+/* ── Location click-through detail (map + ranked list) ──────────────────── */
+function LocationDetail({ items }) {
+    const n = items.length;
+    const accidents = items.filter((i) => i.type === 'accident').length;
+    const flight = items.filter((i) => i.environment === 'flight').length;
+
+    const Tile = ({ label, value }) => (
+        <div className="rounded-md bg-slate-50 px-3 py-2 text-center ring-1 ring-slate-100 ring-inset">
+            <p className="font-display text-xl font-bold text-navy-800">{value}</p>
+            <p className="label-mono !text-[0.55rem]">{label}</p>
+        </div>
+    );
+
+    return (
+        <div>
+            <div className="mb-4 grid grid-cols-4 gap-2">
+                <Tile label="Total" value={n} />
+                <Tile label="Accidents" value={accidents} />
+                <Tile label="Incidents" value={n - accidents} />
+                <Tile label="Flight / Ground" value={`${flight}/${n - flight}`} />
+            </div>
+            <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto pr-1">
+                {items.map((it, idx) => (
+                    <li key={idx} className="py-2.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-xs text-navy-800">{it.date}</span>
+                            <Badge tone={it.type === 'accident' ? 'red' : 'amber'}>{it.type}</Badge>
+                            <Badge tone={it.environment === 'flight' ? 'sky' : 'navy'}>{it.environment}</Badge>
+                            <span className="label-mono !text-[0.6rem]">{it.cause}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-600">{it.description}</p>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
 export default function Dashboard({
     stats,
     comparison,
@@ -100,9 +140,13 @@ export default function Dashboard({
     environment_split: environmentSplit,
     monthly,
     monthly_year: monthlyYear,
-    top_locations: topLocations,
+    all_locations: allLocations,
+    location_details: locationDetails,
+    unlocated,
 }) {
+    const [selectedLoc, setSelectedLoc] = useState(null);
     const maxHazard = hazards.reduce((m, h) => Math.max(m, h.count), 0);
+    const maxLoc = allLocations.reduce((m, l) => Math.max(m, l.total), 0);
     const compareArrow = comparison.direction; // up | down | same
     const deltaText =
         comparison.delta_pct === null
@@ -185,8 +229,8 @@ export default function Dashboard({
                     )}
                 </Panel>
 
-                <Panel title="Where Mishaps Happen" className="lg:col-span-2">
-                    <p className="label-mono mb-1 !text-[0.6rem]">Ground vs Flight · all years</p>
+                <Panel title="Ground vs Flight" className="lg:col-span-2">
+                    <p className="label-mono mb-1 !text-[0.6rem]">Environment · all years</p>
                     <p className="mb-2 text-sm text-slate-600">
                         <span className="font-semibold text-navy-800">{envLead} operations</span> account for{' '}
                         <span className="font-semibold text-navy-800">{envPct}%</span> of all mishaps.
@@ -217,70 +261,81 @@ export default function Dashboard({
                 </Panel>
             </div>
 
-            {/* 4 — Supporting detail charts, with a plain takeaway on each */}
-            <p className="label-mono mb-3 !text-slate-400">Supporting Detail</p>
-            <div className="grid gap-5 lg:grid-cols-3">
-                <Panel title="Yearly Trend" className="lg:col-span-2">
-                    <p className="mb-3 text-sm text-slate-600">
-                        Mishaps per year across {stats.span}. Peak year:{' '}
-                        <span className="font-semibold text-navy-800">
-                            {comparison.peak_year} ({comparison.peak_count})
-                        </span>
-                        .
-                    </p>
-                    <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={yearlyTrend} margin={{ top: 8, right: 16, bottom: 4, left: -16 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
-                                <XAxis dataKey="year" tick={axis} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} />
-                                <YAxis tick={axis} tickLine={false} axisLine={false} allowDecimals={false} />
-                                <Tooltip contentStyle={tooltipStyle} />
-                                <Line
-                                    type="monotone"
-                                    dataKey="total"
-                                    name="Mishaps"
-                                    stroke={NAVY}
-                                    strokeWidth={2.5}
-                                    dot={{ r: 3, fill: NAVY }}
-                                    activeDot={{ r: 5, fill: GOLD }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
+            {/* 4 — Where it happened: a map of the Philippines */}
+            <Panel title="Where Mishaps Happen — Map" className="mb-5">
+                <div className="grid gap-6 md:grid-cols-2">
+                    <div>
+                        <p className="label-mono mb-2 !text-[0.6rem]">
+                            Marker size = number of mishaps · hover a marker for detail
+                        </p>
+                        <PhilippinesMap
+                            locations={allLocations}
+                            unlocated={unlocated}
+                            onSelect={setSelectedLoc}
+                        />
                     </div>
-                </Panel>
-
-                <Panel title="Top 5 Locations">
-                    <p className="mb-3 text-sm text-slate-600">Bases and areas with the most reports.</p>
-                    <div className="h-60">
-                        {topLocations.length === 0 ? (
-                            <p className="pt-10 text-center text-sm text-slate-500">No data yet.</p>
+                    <div>
+                        <p className="label-mono mb-3 !text-[0.6rem]">
+                            Locations ranked (all years) · click for details
+                        </p>
+                        {allLocations.length === 0 ? (
+                            <p className="text-sm text-slate-500">No data yet.</p>
                         ) : (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                    data={topLocations}
-                                    layout="vertical"
-                                    margin={{ top: 4, right: 20, bottom: 4, left: 8 }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" horizontal={false} />
-                                    <XAxis type="number" tick={axis} tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <YAxis
-                                        type="category"
-                                        dataKey="location"
-                                        tick={axis}
-                                        tickLine={false}
-                                        axisLine={{ stroke: '#e2e8f0' }}
-                                        width={90}
-                                    />
-                                    <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#f1f5f9' }} />
-                                    <Bar dataKey="total" name="Mishaps" fill={NAVY} radius={[0, 3, 3, 0]} maxBarSize={22} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <div className="divide-y divide-slate-100">
+                                {allLocations.slice(0, 10).map((l, i) => (
+                                    <button
+                                        key={l.location}
+                                        type="button"
+                                        onClick={() => setSelectedLoc(l.location)}
+                                        className="block w-full rounded text-left hover:bg-slate-50"
+                                    >
+                                        <HazardBar
+                                            label={l.location}
+                                            count={l.total}
+                                            pct={stats.total ? Math.round((l.total / stats.total) * 100) : 0}
+                                            max={maxLoc}
+                                            highlight={i === 0}
+                                        />
+                                    </button>
+                                ))}
+                            </div>
                         )}
                     </div>
-                </Panel>
-            </div>
+                </div>
+            </Panel>
 
-            <Panel title={`Monthly Pattern — ${monthlyYear}`} className="mt-5">
+            {/* 5 — Supporting detail charts, with a plain takeaway on each */}
+            <p className="label-mono mb-3 !text-slate-400">Supporting Detail</p>
+            <Panel title="Yearly Trend" className="mb-5">
+                <p className="mb-3 text-sm text-slate-600">
+                    Mishaps per year across {stats.span}. Peak year:{' '}
+                    <span className="font-semibold text-navy-800">
+                        {comparison.peak_year} ({comparison.peak_count})
+                    </span>
+                    .
+                </p>
+                <div className="h-60">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={yearlyTrend} margin={{ top: 8, right: 16, bottom: 4, left: -16 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
+                            <XAxis dataKey="year" tick={axis} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} />
+                            <YAxis tick={axis} tickLine={false} axisLine={false} allowDecimals={false} />
+                            <Tooltip contentStyle={tooltipStyle} />
+                            <Line
+                                type="monotone"
+                                dataKey="total"
+                                name="Mishaps"
+                                stroke={NAVY}
+                                strokeWidth={2.5}
+                                dot={{ r: 3, fill: NAVY }}
+                                activeDot={{ r: 5, fill: GOLD }}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            </Panel>
+
+            <Panel title={`Monthly Pattern — ${monthlyYear}`}>
                 <p className="mb-3 text-sm text-slate-600">
                     When mishaps occurred through the current year.
                 </p>
@@ -296,6 +351,14 @@ export default function Dashboard({
                     </ResponsiveContainer>
                 </div>
             </Panel>
+
+            <Modal
+                open={selectedLoc !== null}
+                onClose={() => setSelectedLoc(null)}
+                title={selectedLoc ? `${selectedLoc} — Mishap Details` : ''}
+            >
+                {selectedLoc && <LocationDetail items={locationDetails[selectedLoc] ?? []} />}
+            </Modal>
         </>
     );
 }
