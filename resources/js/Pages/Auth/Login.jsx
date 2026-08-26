@@ -1,5 +1,4 @@
 import { Head, useForm } from '@inertiajs/react';
-import Seal from '@/Components/Seal';
 import { Button, Field } from '@/Components/Ui';
 
 export default function Login() {
@@ -19,13 +18,17 @@ export default function Login() {
             <Head title="Sign In" />
 
             <div className="w-full max-w-md">
-                <div className="mb-6 flex items-center gap-4">
-                    <Seal src="/img/wing-seal.png" label="15th Strike Wing" className="h-14 w-14" />
+                <div className="mb-6 flex flex-col items-center gap-3 text-center">
+                    <img
+                        src="/img/safety-seal.jpg"
+                        alt="15SW Safety Office seal"
+                        className="h-28 w-28 rounded-full object-cover ring-1 ring-slate-200 shadow-sm"
+                    />
                     <div>
                         <p className="label-mono !text-gold-600 !text-[0.6rem]">
                             Republic of the Philippines · Philippine Air Force
                         </p>
-                        <h1 className="font-display text-xl leading-tight font-bold tracking-wide text-navy-900 uppercase">
+                        <h1 className="font-display text-2xl leading-tight font-bold tracking-wide text-navy-900 uppercase">
                             15SW Safety
                         </h1>
                         <p className="label-mono !text-[0.6rem]">15th Strike Wing — Wing Safety Office</p>
@@ -76,8 +79,10 @@ export default function Login() {
                     </Button>
                 </form>
 
-                <p className="label-mono mt-5 text-center !text-[0.6rem]">
+                <p className="label-mono mt-5 text-center !text-[0.6rem] leading-relaxed">
                     15SW Safety v1.0 · For official safety use only
+                    <br />
+                    Developed by the Office of the Directorate of Personnel, 15th Strike Wing
                 </p>
             </div>
         </div>

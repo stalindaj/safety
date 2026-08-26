@@ -155,8 +155,10 @@ export default function AppLayout({ children }) {
                     {children}
                 </main>
 
-                <footer className="label-mono !text-[0.6rem] px-6 py-6 text-center">
+                <footer className="label-mono !text-[0.6rem] px-6 py-6 text-center leading-relaxed">
                     15SW Safety v1.0 · For official safety use only · 15th Strike Wing, Philippine Air Force
+                    <br />
+                    Developed by the Office of the Directorate of Personnel, 15th Strike Wing
                 </footer>
             </div>
         </div>

@@ -10,35 +10,35 @@
     --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
     --font-display: 'Barlow Condensed', 'Inter', ui-sans-serif, sans-serif;
 
-    /* Theme: blue + yellow on white.
-       NOTE: the scale is still *named* `navy` (blue family) and `gold`
-       (yellow family) so every component's utility classes keep working —
-       only the values changed. Re-skin the whole app from right here. */
+    /* Theme: sampled from the 15SW Safety Office seal — the shield's deep
+       navy-blue and the command gold of the lightning / laurel / "MISSION
+       FIRST" text. The scales are still *named* `navy` and `gold` so every
+       component's utility classes keep working — re-skin from right here. */
 
-    /* Blue family (primary — text, nav, buttons, links) */
-    --color-navy-50: #eff6ff;
-    --color-navy-100: #dbeafe;
-    --color-navy-200: #bfdbfe;
-    --color-navy-300: #93c5fd;
-    --color-navy-400: #60a5fa;
-    --color-navy-500: #3b82f6;
-    --color-navy-600: #2563eb;
-    --color-navy-700: #1d4ed8;
-    --color-navy-800: #1e40af;
-    --color-navy-900: #1e3a8a;
-    --color-navy-950: #172554;
+    /* Navy-blue family (primary — text, nav, buttons, links); shield blue ≈ 700 */
+    --color-navy-50: #eef2f8;
+    --color-navy-100: #d5e0ef;
+    --color-navy-200: #aec3dd;
+    --color-navy-300: #7f9fc6;
+    --color-navy-400: #5077a8;
+    --color-navy-500: #33578b;
+    --color-navy-600: #294a7c;
+    --color-navy-700: #243f6b;
+    --color-navy-800: #1c3153;
+    --color-navy-900: #152840;
+    --color-navy-950: #0d1a2b;
 
-    /* Yellow family (accent — highlights, pills, the accent bar) */
-    --color-gold-50: #fefce8;
-    --color-gold-100: #fef9c3;
-    --color-gold-200: #fef08a;
-    --color-gold-300: #fde047;
-    --color-gold-400: #facc15;
-    --color-gold-500: #eab308;
-    --color-gold-600: #ca8a04;
-    --color-gold-700: #a16207;
-    --color-gold-800: #854d0e;
-    --color-gold-900: #713f12;
+    /* Command gold family (accent — highlights, pills, the accent bar) */
+    --color-gold-50: #fbf6e9;
+    --color-gold-100: #f6ecc6;
+    --color-gold-200: #eed88a;
+    --color-gold-300: #e6c257;
+    --color-gold-400: #dcab34;
+    --color-gold-500: #c8931f;
+    --color-gold-600: #a8761a;
+    --color-gold-700: #855b17;
+    --color-gold-800: #6d491a;
+    --color-gold-900: #5c3d1a;
 }
 
 @layer base {

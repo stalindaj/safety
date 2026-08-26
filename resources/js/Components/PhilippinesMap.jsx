@@ -96,9 +96,9 @@ export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect
                                 cx={l.x}
                                 cy={l.y}
                                 r={radius(l.total)}
-                                fill={top ? '#eab308' : '#2563eb'}
-                                fillOpacity="0.55"
-                                stroke={top ? '#a16207' : '#1e40af'}
+                                fill={top ? '#c8931f' : '#33578b'}
+                                fillOpacity="0.6"
+                                stroke={top ? '#855b17' : '#152840'}
                                 strokeWidth="1"
                             />
                             {l.total >= 5 && (

@@ -20,10 +20,10 @@ import { Badge, Modal, Panel } from '@/Components/Ui';
 import { AlertIcon, CheckIcon } from '@/Components/Icons';
 import PhilippinesMap from '@/Components/PhilippinesMap';
 
-const NAVY = '#1d4ed8'; // blue — lines & bars
-const GOLD = '#eab308'; // yellow — monthly bars & highlight
-const SKY = '#2563eb'; // Flight slice (blue)
-const ROSE = '#f59e0b'; // Ground slice (amber/yellow)
+const NAVY = '#2f5488'; // shield navy — lines & bars
+const GOLD = '#c8931f'; // command gold — monthly bars & highlight
+const SKY = '#33578b'; // Flight slice (navy)
+const ROSE = '#c8931f'; // Ground slice (gold)
 
 const axis = { fontSize: 11, fontFamily: 'IBM Plex Mono, monospace', fill: '#64748b' };
 const tooltipStyle = {
