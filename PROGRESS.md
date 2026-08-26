@@ -1,7 +1,7 @@
 # 15SW Safety — Progress & Handoff
 
-> Living status file so work can continue in a new chat without losing context.
-> Last updated: 2026-08-26.
+> Living status file so work can continue in a new chat (or a new laptop)
+> without losing context. Last updated: 2026-08-26.
 
 ## What this is
 **15SW Safety** — the 15th Strike Wing Wing Safety Office platform. The app is
@@ -18,6 +18,27 @@ safety modules are planned. Repo: <https://github.com/stalindaj/safety> (branch
   NOT Git Bash. Node/npm are on both. Run `php artisan` / `composer` via PowerShell.
 - Local run: `php artisan serve` + `npm run dev` (or `npm run build`). Login
   `superadmin@15sw.paf.mil.ph` / `ChangeMe!2026`.
+
+## Continuing on a NEW laptop (fresh setup)
+`.env` and the local SQLite DB are gitignored, so a fresh clone needs a few
+steps. Prereqs: install **Laravel Herd** (bundles PHP 8.3+ & Composer) and
+**Node.js**. Run php/composer from **PowerShell** (Herd's PATH), not Git Bash.
+
+```powershell
+git clone https://github.com/stalindaj/safety.git
+cd safety
+Copy-Item .env.example .env          # create env file
+php artisan key:generate             # vendor/ is committed, so artisan runs w/o composer install
+New-Item -ItemType File database\database.sqlite   # local DB (gitignored)
+php artisan migrate --seed           # schema + 128 mishaps + superadmin account
+npm install                          # only if you'll edit the UI (node_modules is gitignored)
+php artisan serve                    # http://localhost:8000  (add: npm run dev  for hot reload)
+```
+
+Notes: the committed `public/build/` means the app renders even without
+`npm install`; run `npm run build` only after editing the frontend, and commit
+the rebuilt assets. If `php`/`composer` aren't found, they're on the PowerShell
+PATH via Herd (`~/.config/herd/bin`), not Git Bash.
 
 ## Done so far
 - **Mishap Records** (`/mishaps`): searchable/filterable table + add/edit/delete
