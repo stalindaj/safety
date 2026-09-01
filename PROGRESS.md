@@ -82,15 +82,20 @@ PATH via Herd (`~/.config/herd/bin`), not Git Bash.
    [DEPLOY-PLAYBOOK.md](DEPLOY-PLAYBOOK.md). Production secrets were generated in
    chat (APP_KEY + SETUP_TOKEN) — regenerate if lost: `php artisan key:generate
    --show` and `php -r "echo bin2hex(random_bytes(24));"`. Do NOT commit secrets.
-1b. **Redesign — BI/army look (IN PROGRESS, top priority).** Make the whole UI a
-   simple, professional **BI dashboard**, military/realistic, colors from the
-   Safety Office seal (navy + gold), header logo = the seal. Model the analytics
-   on the **"Weekly Safety Analytics" PPT** (`Downloads/EDITED Weekly_Safety_
-   Forecast_29_March_-_04_April_2026.pptx`, 30 slides): its core is a WEEKLY
-   FORECAST — for the upcoming week, list the mishaps that historically occurred
-   that same calendar week (flight vs ground) + a likelihood % (e.g. "4.5% chance
-   of a flight incident this week"); plus a year-by-year breakdown table
-   (year × incident/accident × ground/flight). Keep it simple.
+1b. **Dashboard BI redesign — DONE (2026-08-26).** `DashboardController` now
+   sends raw records; `Dashboard.jsx` computes everything client-side so it's a
+   real BI view. Header logo = Safety Office seal. Built from the "Weekly Safety
+   Analytics" PPT (`Downloads/EDITED Weekly_Safety_Forecast_...pptx`):
+   - **Slice A** — BI reskin: filter bar, KPI tiles, navy/gold, simple.
+   - **Slice B** — "This Week — Safety Forecast": mishaps in the current
+     calendar week (next 7 days) across all years, flight/ground split +
+     likelihood % (= share of years that saw one that week).
+   - **Slice C** — year breakdown table (year × incident/accident × ground/flight).
+   - **Click-to-filter**: Type (accident/incident) + Environment (ground/flight)
+     chips cross-filter the whole dashboard instantly. Monthly chart has a year
+     selector. Map click → location detail modal (respects filter).
+   Remaining polish idea: the other pages (records/plan/account) inherit the
+   palette but could get the same BI tightening if wanted.
 2. **Attendance feature** — PARKED (meeting badge-QR check-in). Spec + standalone
    HTML tools in `Desktop/attendance` (jsQR downloaded); resume later.
 3. **CAPS Slice 2** — status tracking board across all plans (complied vs ongoing
