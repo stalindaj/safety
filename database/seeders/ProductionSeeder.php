@@ -18,6 +18,7 @@ class ProductionSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             MishapSeeder::class,
+            CorrectiveActionSeeder::class,
         ]);
     }
 }

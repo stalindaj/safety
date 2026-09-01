@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\CorrectiveActionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MishapController;
 use App\Http\Controllers\ProfileController;
@@ -24,6 +25,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/mishaps', [MishapController::class, 'store'])->name('mishaps.store');
     Route::put('/mishaps/{mishap}', [MishapController::class, 'update'])->name('mishaps.update');
     Route::delete('/mishaps/{mishap}', [MishapController::class, 'destroy'])->name('mishaps.destroy');
+
+    // Corrective Action Plan (per mishap) — the detailed, tracked view.
+    Route::get('/mishaps/{mishap}/plan', [CorrectiveActionController::class, 'show'])->name('mishaps.plan');
+    Route::post('/mishaps/{mishap}/plan', [CorrectiveActionController::class, 'store'])->name('mishaps.plan.store');
+    Route::put('/corrective-actions/{correctiveAction}', [CorrectiveActionController::class, 'update'])->name('corrective-actions.update');
+    Route::delete('/corrective-actions/{correctiveAction}', [CorrectiveActionController::class, 'destroy'])->name('corrective-actions.destroy');
 
     // Account — change your own password.
     Route::get('/account', [ProfileController::class, 'edit'])->name('account.edit');

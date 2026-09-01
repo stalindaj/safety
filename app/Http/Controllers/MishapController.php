@@ -32,6 +32,7 @@ class MishapController extends Controller
         ];
 
         $mishaps = Mishap::query()
+            ->withCount('correctiveActions')
             ->latestFirst()
             ->when($filters['year'], fn ($q, $year) => $q->forYear($year))
             ->when($filters['type'], fn ($q, $type) => $q->where('mishap_type', $type))
@@ -115,6 +116,7 @@ class MishapController extends Controller
             'description' => $m->description,
             'corrective_action' => $m->corrective_action,
             'lesson_learned' => $m->lesson_learned,
+            'cap_count' => $m->corrective_actions_count ?? 0,
         ];
     }
 }

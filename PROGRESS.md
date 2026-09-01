@@ -61,6 +61,18 @@ PATH via Herd (`~/.config/herd/bin`), not Git Bash.
   15th Strike Wing."
 - 7/7 PHPUnit tests pass.
 
+## Corrective Action Plan module — Slice 1 DONE (2026-08-26)
+- `corrective_actions` table (belongs to mishap): latent_condition, category
+  (DOTMPLF), cause_factor, opr, corrective_action, staff_action, status, remarks,
+  sort_order. Model `CorrectiveAction`; `Mishap::correctiveActions()`.
+- `CorrectiveActionSeeder` imported the CAPS.xlsx plans: **5 of 6 attached** to
+  their existing mishaps (28 actions); the **MPV vehicular skipped** (not a
+  record yet — has no date in the sheet; add that mishap then re-seed to attach).
+- **Mishap count unchanged (128)** — analysis untouched.
+- UI: `/mishaps/{id}/plan` (`Mishaps/Plan.jsx`, `CorrectiveActionController`) —
+  per-mishap plan with status summary + add/edit/delete rows; "Plan (N)" link in
+  the records table. **Slice 2 (status tracking board across all plans) not built.**
+
 ## NOT done yet / next steps
 1. **Go live on cPanel** — prepared but not executed. Plan uses subdomain/folder/
    DB all named **`safety`**. Steps: GitHub token → MySQL DB (`youruser_safety`)
@@ -70,11 +82,20 @@ PATH via Herd (`~/.config/herd/bin`), not Git Bash.
    [DEPLOY-PLAYBOOK.md](DEPLOY-PLAYBOOK.md). Production secrets were generated in
    chat (APP_KEY + SETUP_TOKEN) — regenerate if lost: `php artisan key:generate
    --show` and `php -r "echo bin2hex(random_bytes(24));"`. Do NOT commit secrets.
-2. **Attendance feature** — a meeting check-in system (badge-QR scan) is the next
-   focus. Separate spec from the user; not yet started here.
-3. **Corrective Action Plans (CAPS)** — see next section; the real format to build
-   toward (manual entry + status tracking; no AI).
-4. **More Safety modules** under the umbrella (analytics/input is just the first).
+1b. **Redesign — BI/army look (IN PROGRESS, top priority).** Make the whole UI a
+   simple, professional **BI dashboard**, military/realistic, colors from the
+   Safety Office seal (navy + gold), header logo = the seal. Model the analytics
+   on the **"Weekly Safety Analytics" PPT** (`Downloads/EDITED Weekly_Safety_
+   Forecast_29_March_-_04_April_2026.pptx`, 30 slides): its core is a WEEKLY
+   FORECAST — for the upcoming week, list the mishaps that historically occurred
+   that same calendar week (flight vs ground) + a likelihood % (e.g. "4.5% chance
+   of a flight incident this week"); plus a year-by-year breakdown table
+   (year × incident/accident × ground/flight). Keep it simple.
+2. **Attendance feature** — PARKED (meeting badge-QR check-in). Spec + standalone
+   HTML tools in `Desktop/attendance` (jsQR downloaded); resume later.
+3. **CAPS Slice 2** — status tracking board across all plans (complied vs ongoing
+   by unit/OPR) + a dashboard tile.
+4. **More Safety modules** under the umbrella.
 
 Note: AI/auto-generation has been **descoped** — see "Auto-generation — DESCOPED".
 

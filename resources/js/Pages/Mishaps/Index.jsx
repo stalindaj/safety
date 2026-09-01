@@ -1,4 +1,4 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Badge, Button, EmptyState, Field, Modal, PageHeader, Panel, Table } from '@/Components/Ui';
@@ -307,6 +307,13 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                                         </button>
                                     </td>
                                     <td className="px-3 py-2.5 whitespace-nowrap text-right">
+                                        <Link
+                                            href={`/mishaps/${m.id}/plan`}
+                                            className="label-mono !text-gold-700 hover:!text-gold-800 px-1.5"
+                                            title="Corrective Action Plan"
+                                        >
+                                            Plan{m.cap_count > 0 ? ` (${m.cap_count})` : ''}
+                                        </Link>
                                         <button
                                             type="button"
                                             onClick={() => setEditing(m)}
