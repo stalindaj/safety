@@ -97,7 +97,11 @@ export default function AppLayout({ children }) {
             <div className="lg:pl-16">
                 <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                     <div className="flex items-center gap-4 px-4 py-3 sm:px-6">
-                        <Seal src="/img/wing-seal.png" label="15th Strike Wing" className="h-11 w-11 shrink-0" />
+                        <img
+                            src="/img/safety-seal.jpg"
+                            alt="15SW Safety Office"
+                            className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+                        />
                         <div className="min-w-0 flex-1">
                             <p className="label-mono !text-gold-600 !text-[0.6rem] truncate">
                                 Republic of the Philippines · Philippine Air Force
