@@ -1,20 +1,20 @@
 {
-  "_AppLayout-BxhIUrPo.js": {
-    "file": "assets/AppLayout-BxhIUrPo.js",
+  "_AppLayout-_6wu56M9.js": {
+    "file": "assets/AppLayout-_6wu56M9.js",
     "name": "AppLayout",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_Ui-Cm79idSR.js": {
-    "file": "assets/Ui-Cm79idSR.js",
+  "_Ui-CMNQU1VA.js": {
+    "file": "assets/Ui-CMNQU1VA.js",
     "name": "Ui",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-L9pvk1Xm.css",
+    "file": "assets/app-DJjdNiuX.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -23,62 +23,62 @@
     ]
   },
   "resources/js/Pages/Account/Edit.jsx": {
-    "file": "assets/Edit-Brn_7axX.js",
+    "file": "assets/Edit-CqWnQ7FE.js",
     "name": "Edit",
     "src": "resources/js/Pages/Account/Edit.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BxhIUrPo.js",
-      "_Ui-Cm79idSR.js"
+      "_AppLayout-_6wu56M9.js",
+      "_Ui-CMNQU1VA.js"
     ],
     "css": [
-      "assets/app-L9pvk1Xm.css"
+      "assets/app-DJjdNiuX.css"
     ]
   },
   "resources/js/Pages/Auth/Login.jsx": {
-    "file": "assets/Login-CV-foPD4.js",
+    "file": "assets/Login-Bautwmpl.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-Cm79idSR.js"
+      "_Ui-CMNQU1VA.js"
     ],
     "css": [
-      "assets/app-L9pvk1Xm.css"
+      "assets/app-DJjdNiuX.css"
     ]
   },
   "resources/js/Pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-CIh5lZgL.js",
+    "file": "assets/Dashboard-Dpw_XZ_p.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Dashboard.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BxhIUrPo.js",
-      "_Ui-Cm79idSR.js"
+      "_AppLayout-_6wu56M9.js",
+      "_Ui-CMNQU1VA.js"
     ],
     "css": [
-      "assets/app-L9pvk1Xm.css"
+      "assets/app-DJjdNiuX.css"
     ]
   },
   "resources/js/Pages/Mishaps/Index.jsx": {
-    "file": "assets/Index-xTe0qiVa.js",
+    "file": "assets/Index-D2xWT4zY.js",
     "name": "Index",
     "src": "resources/js/Pages/Mishaps/Index.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BxhIUrPo.js",
-      "_Ui-Cm79idSR.js"
+      "_AppLayout-_6wu56M9.js",
+      "_Ui-CMNQU1VA.js"
     ],
     "css": [
-      "assets/app-L9pvk1Xm.css"
+      "assets/app-DJjdNiuX.css"
     ]
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-CIS1A-U_.js",
+    "file": "assets/app-DQI1tjsH.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
@@ -89,7 +89,7 @@
       "resources/js/Pages/Mishaps/Index.jsx"
     ],
     "css": [
-      "assets/app-L9pvk1Xm.css"
+      "assets/app-DJjdNiuX.css"
     ]
   }
 }

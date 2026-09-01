@@ -70,11 +70,13 @@ PATH via Herd (`~/.config/herd/bin`), not Git Bash.
    [DEPLOY-PLAYBOOK.md](DEPLOY-PLAYBOOK.md). Production secrets were generated in
    chat (APP_KEY + SETUP_TOKEN) — regenerate if lost: `php artisan key:generate
    --show` and `php -r "echo bin2hex(random_bytes(24));"`. Do NOT commit secrets.
-2. **AI "Generate with AI" button** (corrective action + lesson learned) — still
-   a disabled placeholder in the mishap form. Decision pending (see below).
+2. **Attendance feature** — a meeting check-in system (badge-QR scan) is the next
+   focus. Separate spec from the user; not yet started here.
 3. **Corrective Action Plans (CAPS)** — see next section; the real format to build
-   toward.
+   toward (manual entry + status tracking; no AI).
 4. **More Safety modules** under the umbrella (analytics/input is just the first).
+
+Note: AI/auto-generation has been **descoped** — see "Auto-generation — DESCOPED".
 
 ## CAPS.xlsx — the corrective-action blueprint
 The user's `CAPS.xlsx` (Downloads) is one sheet per mishap, each a formal
@@ -90,21 +92,16 @@ Ongoing, ETOC, Approved…).
 multi-row plan per mishap with an OPR and a tracked status. The natural next
 feature is a **CAP sub-record** attached to a mishap (rows of gap → cause factor
 → corrective action → OPR → staff action → status), which also becomes the
-tracking view ("what's Complied vs Ongoing"). The AI button, if built, should
-draft rows in THIS shape, not a single paragraph.
+tracking view ("what's Complied vs Ongoing"). These are entered/edited by staff.
 
-## AI generation — open decision
-Discussed at length. Constraints: only runs when a report is created (occasional);
-shared cPanel can't host a local model (no daemon, no GPU, low RAM). Options:
-- **Template-based "smart draft"** (recommended for now): pure PHP, keyed on the
-  cause + DOTMPLF, tailored with record specifics. Free, private, runs on cPanel,
-  no dependency. Somewhat repetitive but it's a draft the officer edits.
-- **Small online LLM** (e.g. Claude Haiku): better/varied drafts, ~fractions of a
-  cent per click, but data leaves the network + needs a key.
-- **Local model (Ollama)**: free + private but needs a VPS/office machine with
-  ≥8 GB RAM — NOT possible on the shared cPanel host.
-User leaning: small-scale/online, possibly just "tailor a generic response"
-(= the template approach). Nothing wired yet, per user's instruction.
+## Auto-generation — DESCOPED (2026-08-26)
+AI/auto-generation of corrective actions is **out of scope** — removed from the
+app entirely (no "Generate" button, no AI code or config). Reason: truly private
++ online + capable-at-novel-cases requires self-hosted model hardware, which is
+an infrastructure/policy decision above this project. Focus is **input + data
+analysis** (and, next, the attendance feature). The `corrective_action` /
+`lesson_learned` fields remain as plain manual inputs. Do not re-add AI unless
+the user explicitly asks.
 
 ## Key files
 - `app/Http/Controllers/` — `DashboardController` (findings/hazards/comparison/

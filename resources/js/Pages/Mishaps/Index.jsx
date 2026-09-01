@@ -111,20 +111,9 @@ function MishapForm({ mishap, options, onDone }) {
                 />
             </Field>
 
-            {/* Post-investigation fields. AI drafting is planned — the button is a
-                placeholder until the generator is wired up. */}
+            {/* Post-investigation fields — filled in once the investigation closes. */}
             <div className="rounded-md border border-dashed border-slate-300 bg-slate-50/60 p-4">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="label-mono !text-navy-700">Post-Investigation (optional)</p>
-                    <button
-                        type="button"
-                        disabled
-                        title="AI generation is planned for a future release"
-                        className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md bg-white px-2.5 py-1 font-mono text-[0.65rem] tracking-wide text-slate-400 uppercase ring-1 ring-slate-200 ring-inset"
-                    >
-                        ✨ Generate with AI · Soon
-                    </button>
-                </div>
+                <p className="label-mono !text-navy-700 mb-3">Post-Investigation (optional)</p>
                 <div className="grid gap-4">
                     <Field label="Corrective Action" error={errors.corrective_action}>
                         <textarea

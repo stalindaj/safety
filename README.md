@@ -9,11 +9,6 @@ a dashboard (key findings, cause breakdown, a Philippines map of locations, and
 trend charts). Ships seeded with the CY 2016–2026 historical record. More safety
 modules are planned.
 
-> **Planned:** AI-assisted drafting of *corrective action* and *lesson learned*
-> from a mishap's description. The columns and form fields already exist (the
-> "Generate with AI" button is a disabled placeholder); only the generator is
-> still to be wired up.
-
 ---
 
 ## Stack
@@ -72,7 +67,7 @@ For iterative work run `npm run dev` alongside `php artisan serve`.
 | `mishap_type` | `accident` \| `incident` |
 | `environment` | `ground` \| `flight` |
 | `description` | narrative |
-| `corrective_action`, `lesson_learned` | nullable; filled post-investigation (AI drafting planned) |
+| `corrective_action`, `lesson_learned` | nullable; filled post-investigation |
 
 ---
 
