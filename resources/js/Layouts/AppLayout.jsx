@@ -17,14 +17,11 @@ function Clock() {
     }, []);
 
     const local = now.toLocaleTimeString('en-GB', { hour12: false, timeZone: 'Asia/Manila' });
-    const zulu = now.toLocaleTimeString('en-GB', { hour12: false, timeZone: 'UTC' });
 
     return (
         <div className="hidden text-right sm:block">
-            <p className="label-mono !text-[0.6rem]">Zulu / Local</p>
-            <p className="font-mono text-sm text-navy-800 tabular-nums">
-                {zulu}Z <span className="text-slate-300">|</span> {local}
-            </p>
+            <p className="label-mono !text-[0.6rem]">Local Time</p>
+            <p className="font-mono text-sm text-navy-800 tabular-nums">{local}</p>
         </div>
     );
 }
