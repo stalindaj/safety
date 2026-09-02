@@ -19,8 +19,10 @@ class SessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // The sign-in ID is matched against the `email` column, but may be a
+        // plain username (e.g. "safety") — not necessarily an email address.
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 

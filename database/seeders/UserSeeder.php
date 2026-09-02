@@ -21,5 +21,17 @@ class UserSeeder extends Seeder
                 'role' => 'admin',
             ],
         );
+
+        // Simple demo login for presentations. REMOVE or change the password
+        // before real/production use — "password" is not secure.
+        User::updateOrCreate(
+            ['email' => 'safety'],
+            [
+                'name' => 'Safety',
+                'rank' => null,
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+            ],
+        );
     }
 }

@@ -43,9 +43,9 @@ export default function Login() {
                         </p>
                     </div>
 
-                    <Field label="Service Email" error={errors.email}>
+                    <Field label="Username or Email" error={errors.email}>
                         <input
-                            type="email"
+                            type="text"
                             className="field"
                             value={data.email}
                             autoComplete="username"
