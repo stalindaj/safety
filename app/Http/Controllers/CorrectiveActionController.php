@@ -23,7 +23,7 @@ class CorrectiveActionController extends Controller
                 'location' => $mishap->location,
                 'mishap_type' => $mishap->mishap_type,
                 'environment' => $mishap->environment,
-                'cause' => $mishap->cause,
+                'category' => $mishap->category,
                 'description' => $mishap->description,
             ],
             'entries' => $mishap->correctiveActions->map(fn (CorrectiveAction $c) => $this->present($c)),

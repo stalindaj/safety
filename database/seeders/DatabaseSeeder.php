@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             MishapSeeder::class,
             CorrectiveActionSeeder::class,
+            SafetyForecastSeeder::class,
         ]);
     }
 }

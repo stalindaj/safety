@@ -16,12 +16,14 @@ class Mishap extends Model
 
     public const INCIDENT = 'incident';
 
+    public const EVENT = 'event';
+
     public const GROUND = 'ground';
 
     public const FLIGHT = 'flight';
 
     /** Allowed values, reused by validation and the front end. */
-    public const TYPES = [self::ACCIDENT, self::INCIDENT];
+    public const TYPES = [self::ACCIDENT, self::INCIDENT, self::EVENT];
 
     public const ENVIRONMENTS = [self::GROUND, self::FLIGHT];
 

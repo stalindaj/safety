@@ -3,10 +3,10 @@
 namespace App\Support;
 
 /**
- * Derives a single plain-language "cause" for a mishap from its free-text
- * description. The historical workbook never captured a cause field, so we infer
- * it with keyword matching — good enough to surface the dominant hazards for
- * non-analyst readers, and it keeps working as staff add new records.
+ * Derives a single plain-language "category" for a mishap from its free-text
+ * description. The historical workbook never captured a category field, so we
+ * infer it with keyword matching — good enough to surface the dominant hazards
+ * for non-analyst readers, and it keeps working as staff add new records.
  *
  * Categories are checked in priority order (specific/aviation causes before
  * generic ones) and the first match wins, so every mishap lands in exactly one
@@ -36,7 +36,7 @@ class HazardClassifier
     public const OTHER = 'Other / mechanical';
 
     /**
-     * The canonical cause list for the intake dropdown and validation, ordered
+     * The canonical category list for the intake dropdown and validation, ordered
      * roughly by how often it shows up in the record. Must stay in sync with the
      * RULES keys above (plus OTHER) — every value primary() can return is here.
      *
@@ -56,7 +56,7 @@ class HazardClassifier
         self::OTHER,
     ];
 
-    /** The single most likely cause for one description. */
+    /** The single most likely category for one description. */
     public static function primary(?string $description): string
     {
         $text = ' '.mb_strtolower((string) $description).' ';

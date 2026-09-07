@@ -11,7 +11,7 @@ const STATUS = {
     approved: { label: 'Approved', tone: 'navy' },
     as_required: { label: 'As Required', tone: 'neutral' },
 };
-const TYPE_TONE = { accident: 'red', incident: 'amber' };
+const TYPE_TONE = { accident: 'red', incident: 'amber', event: 'neutral' };
 const ENV_TONE = { flight: 'sky', ground: 'navy' };
 
 function EntryForm({ mishapId, entry, statuses, onDone }) {
@@ -96,11 +96,11 @@ export default function Plan({ mishap, entries, statuses }) {
 
     return (
         <>
-            <Head title="Corrective Action Plan" />
+            <Head title="CAPS — Corrective Action Plan" />
 
             <PageHeader
-                title="Corrective Action Plan"
-                description="Gaps, cause factors, corrective actions, responsible office, and tracked status for this mishap."
+                title="CAPS"
+                description="Corrective Action Plan — gaps, cause factors, corrective actions, responsible office, and tracked status for this mishap."
             />
             <Link href="/mishaps" className="label-mono !text-navy-600 hover:!text-navy-900 -mt-3 mb-4 inline-block">
                 &larr; Back to Mishap Records
@@ -113,7 +113,7 @@ export default function Plan({ mishap, entries, statuses }) {
                     <span className="text-sm font-medium text-navy-900">{mishap.location ?? '—'}</span>
                     <Badge tone={TYPE_TONE[mishap.mishap_type]}>{mishap.mishap_type}</Badge>
                     <Badge tone={ENV_TONE[mishap.environment]}>{mishap.environment}</Badge>
-                    {mishap.cause && <span className="label-mono !text-[0.6rem]">{mishap.cause}</span>}
+                    {mishap.category && <span className="label-mono !text-[0.6rem]">{mishap.category}</span>}
                 </div>
                 <p className="mt-2 text-sm text-slate-600">{mishap.description}</p>
             </Panel>

@@ -25,7 +25,7 @@ class MishapSeeder extends Seeder
                 [
                     'mishap_type' => $r['type'],
                     'environment' => $r['env'],
-                    'cause' => HazardClassifier::primary($r['desc']),
+                    'category' => HazardClassifier::primary($r['desc']),
                 ],
             );
         }

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Badge, Button, EmptyState, Field, Modal, PageHeader, Panel, Table } from '@/Components/Ui';
 
-const TYPE_TONE = { accident: 'red', incident: 'amber' };
+const TYPE_TONE = { accident: 'red', incident: 'amber', event: 'neutral' };
 const ENV_TONE = { flight: 'sky', ground: 'navy' };
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 
@@ -14,7 +14,7 @@ function MishapForm({ mishap, options, onDone }) {
         location: mishap?.location ?? '',
         mishap_type: mishap?.mishap_type ?? 'incident',
         environment: mishap?.environment ?? 'ground',
-        cause: mishap?.cause ?? '',
+        category: mishap?.category ?? '',
         description: mishap?.description ?? '',
         corrective_action: mishap?.corrective_action ?? '',
         lesson_learned: mishap?.lesson_learned ?? '',
@@ -87,14 +87,14 @@ function MishapForm({ mishap, options, onDone }) {
                 </Field>
             </div>
 
-            <Field label="Cause / Hazard Type" error={errors.cause}>
+            <Field label="Category / Hazard Type" error={errors.category}>
                 <select
                     className="field"
-                    value={data.cause}
-                    onChange={(e) => setData('cause', e.target.value)}
+                    value={data.category}
+                    onChange={(e) => setData('category', e.target.value)}
                 >
                     <option value="">Auto-detect from description</option>
-                    {options.causes.map((c) => (
+                    {options.categories.map((c) => (
                         <option key={c} value={c}>
                             {c}
                         </option>
@@ -191,7 +191,7 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
 
             <PageHeader
                 title="Mishap Records"
-                description="Log and manage every reported mishap — the accident/incident classification and its ground or flight environment."
+                description="Log and manage every reported mishap — the accident, incident, or event classification and its ground or flight environment."
             />
 
             <Panel
@@ -251,14 +251,14 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                         </select>
                     </label>
                     <label className="block">
-                        <span className="label-mono mb-1 block">Cause</span>
+                        <span className="label-mono mb-1 block">Category</span>
                         <select
                             className="field !py-1.5"
-                            value={filters.cause ?? ''}
-                            onChange={(e) => applyFilter({ cause: e.target.value || null })}
+                            value={filters.category ?? ''}
+                            onChange={(e) => applyFilter({ category: e.target.value || null })}
                         >
-                            <option value="">All causes</option>
-                            {options.causes.map((c) => (
+                            <option value="">All categories</option>
+                            {options.categories.map((c) => (
                                 <option key={c} value={c}>
                                     {c}
                                 </option>
@@ -281,7 +281,7 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                     <EmptyState>No mishap records match these filters.</EmptyState>
                 ) : (
                     <div className="p-2 sm:p-3">
-                        <Table head={['Date', 'Location', 'Type', 'Environment', 'Cause', 'Description', '']}>
+                        <Table head={['Date', 'Location', 'Type', 'Environment', 'Category', 'Description', '']}>
                             {mishaps.data.map((m) => (
                                 <tr key={m.id} className="align-top hover:bg-slate-50">
                                     <td className="px-3 py-2.5 font-mono text-xs whitespace-nowrap text-navy-800">
@@ -295,7 +295,7 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                                         <Badge tone={ENV_TONE[m.environment]}>{m.environment}</Badge>
                                     </td>
                                     <td className="px-3 py-2.5 text-xs whitespace-nowrap text-slate-600">
-                                        {m.cause ?? '—'}
+                                        {m.category ?? '—'}
                                     </td>
                                     <td className="max-w-md px-3 py-2.5 text-sm text-slate-600">
                                         <button
@@ -310,9 +310,9 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                                         <Link
                                             href={`/mishaps/${m.id}/plan`}
                                             className="label-mono !text-gold-700 hover:!text-gold-800 px-1.5"
-                                            title="Corrective Action Plan"
+                                            title="Corrective Action Plan (CAPS)"
                                         >
-                                            Plan{m.cap_count > 0 ? ` (${m.cap_count})` : ''}
+                                            CAPS{m.cap_count > 0 ? ` (${m.cap_count})` : ''}
                                         </Link>
                                         <button
                                             type="button"
