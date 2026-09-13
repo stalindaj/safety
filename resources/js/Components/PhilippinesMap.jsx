@@ -122,7 +122,7 @@ export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect
                 role="img"
                 aria-label={`Map of mishap locations — ${region}`}
             >
-                <path d={PH_PATH} fill="#eaf0f7" stroke="#bcd0e6" strokeWidth={1.2 * zoom} />
+                <path d={PH_PATH} fill="var(--color-navy-50)" stroke="var(--color-navy-200)" strokeWidth={1.2 * zoom} />
                 {placed.map((l, i) => {
                     const top = i === 0;
                     return (
@@ -137,9 +137,9 @@ export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect
                                 cx={l.x}
                                 cy={l.y}
                                 r={radius(l.total) * zoom}
-                                fill={top ? '#c8931f' : '#33578b'}
+                                fill={top ? 'var(--color-gold-500)' : 'var(--color-navy-500)'}
                                 fillOpacity="0.6"
-                                stroke={top ? '#855b17' : '#152840'}
+                                stroke={top ? 'var(--color-gold-700)' : 'var(--color-navy-800)'}
                                 strokeWidth={zoom}
                             />
                             {l.total >= 5 && (
@@ -151,7 +151,7 @@ export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect
                                     fontSize={10 * zoom}
                                     fontFamily="IBM Plex Mono, monospace"
                                     fontWeight="700"
-                                    fill="#fff"
+                                    fill="var(--color-white)"
                                 >
                                     {l.total}
                                 </text>

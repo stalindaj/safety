@@ -162,15 +162,29 @@ class DashboardController extends Controller
             'today' => now()->format('Y-m-d'),
             'risk_forecasts' => $forecasts,
             'spi' => $this->spi($all),
-            'caps' => [
-                'total' => CorrectiveAction::count(),
-                'by_status' => CorrectiveAction::selectRaw('status, count(*) as c')
-                    ->groupBy('status')->pluck('c', 'status'),
-                'by_opr' => CorrectiveAction::query()
-                    ->whereNotNull('opr')->where('opr', '!=', '')
-                    ->selectRaw('opr, count(*) as c')
-                    ->groupBy('opr')->orderByDesc('c')->limit(8)->pluck('c', 'opr'),
-            ],
+            // CAPS follow-through: every mishap with its corrective actions, so the
+            // dashboard can show a year's mishaps and roll the same actions up by
+            // the unit (OPR/UPR) that owns them.
+            'caps' => Mishap::query()
+                ->with(['correctiveActions' => fn ($q) => $q->withCount('proofs')])
+                ->orderByDesc('mishap_date')
+                ->get()
+                ->map(fn (Mishap $m) => [
+                    'id' => $m->id,
+                    'year' => (int) $m->mishap_date->format('Y'),
+                    'display_date' => $m->mishap_date->format('d M Y'),
+                    'location' => $m->location,
+                    'type' => $m->mishap_type,
+                    'environment' => $m->environment,
+                    'description' => $m->description,
+                    'actions' => $m->correctiveActions->map(fn (CorrectiveAction $c) => [
+                        'unit' => trim((string) $c->opr) ?: null,
+                        'status' => $c->status,
+                        'follow_up' => $c->follow_up_name,
+                        'proof' => $c->proofs_count > 0,
+                    ])->values(),
+                ])
+                ->values(),
         ]);
     }
 }

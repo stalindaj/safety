@@ -116,6 +116,22 @@ class CorrectiveActionTest extends TestCase
                 ->where('max_proofs', CorrectiveAction::MAX_PROOFS));
     }
 
+    public function test_the_dashboard_lists_each_mishap_with_its_caps_by_unit(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $action = $this->compliedAction();
+
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Dashboard')
+                ->where('caps.0.id', $action->mishap_id)
+                ->where('caps.0.actions.0.unit', 'WSO')
+                ->where('caps.0.actions.0.status', 'complied')
+                ->where('caps.0.actions.0.follow_up', 'SSgt Juan Dela Cruz')
+                ->where('caps.0.actions.0.proof', true));
+    }
+
     public function test_deleting_the_mishap_removes_its_proof_photos(): void
     {
         $this->actingAs(User::factory()->create());

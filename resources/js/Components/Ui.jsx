@@ -8,7 +8,7 @@ export function Panel({ title, action, children, className = '', bodyClass = 'p-
                 <header className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-3.5">
                     {title && (
                         <h2 className="flex items-center gap-2.5">
-                            <span className="h-4 w-1 rounded-full bg-gold-400" />
+                            <span className="hazard-stripe h-3.5 w-3.5 shrink-0 rounded-[3px] [--band:3px]" aria-hidden="true" />
                             <span className="label-mono !text-navy-800 !text-[0.72rem] font-semibold">{title}</span>
                         </h2>
                     )}
@@ -82,7 +82,8 @@ export function StatTile({ label, value, tone = 'navy', hint }) {
 
 const buttonTones = {
     primary: 'bg-navy-800 text-white hover:bg-navy-900 focus-visible:outline-navy-800',
-    gold: 'bg-gold-400 text-navy-950 font-semibold hover:bg-gold-500 focus-visible:outline-gold-500',
+    // Gold stays gold in both themes, so its text stays dark in both.
+    gold: 'bg-gold-400 text-black/85 font-semibold hover:bg-gold-500 focus-visible:outline-gold-500',
     ghost: 'bg-white text-navy-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus-visible:outline-navy-500',
     danger: 'bg-white text-rose-600 ring-1 ring-inset ring-rose-200 hover:bg-rose-50 focus-visible:outline-rose-500',
 };
@@ -159,11 +160,11 @@ export function Modal({ open, onClose, title, children, width = 'max-w-2xl' }) {
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-navy-950/40 p-4 sm:p-8">
-            <div className={`panel w-full ${width} my-auto`}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/45 p-4 backdrop-blur-[2px] sm:p-8">
+            <div className={`panel w-full ${width} my-auto shadow-xl`}>
                 <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
                     <h2 className="flex items-center gap-2.5">
-                        <span className="h-4 w-1 rounded-full bg-gold-400" />
+                        <span className="hazard-stripe h-3.5 w-3.5 shrink-0 rounded-[3px] [--band:3px]" aria-hidden="true" />
                         <span className="label-mono !text-navy-800 !text-[0.72rem] font-semibold">{title}</span>
                     </h2>
                     <button

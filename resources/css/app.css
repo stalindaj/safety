@@ -41,14 +41,110 @@
     --color-gold-900: #5c3d1a;
 }
 
+/* `dark:` utilities follow the class the theme toggle sets on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
     html {
         -webkit-text-size-adjust: 100%;
+        color-scheme: light;
     }
 
     body {
         background-color: var(--color-slate-100);
         color: var(--color-navy-900);
+    }
+
+    /*
+     * DARK MODE — one switch for the whole app. Every page is built from the
+     * navy / slate / gold and status colour scales, so dark mode re-maps those
+     * scales instead of restyling each component: surfaces (white, slate-50…)
+     * turn deep navy, text shades (navy-900, slate-600…) turn light, and the
+     * status colours keep their meaning (tints go dark, text shades go light).
+     * Mid-tones used as fills (gold-400/500, emerald-500, sky-500…) stay put.
+     */
+    html.dark {
+        color-scheme: dark;
+
+        --color-white: #101b2d;
+
+        --color-slate-50: #15223a;
+        --color-slate-100: #0a1322;
+        --color-slate-200: #22324b;
+        --color-slate-300: #2e4260;
+        --color-slate-400: #6b7f9c;
+        --color-slate-500: #8a9bb5;
+        --color-slate-600: #a9b7cb;
+        --color-slate-700: #c4cfdd;
+        --color-slate-800: #dbe3ee;
+        --color-slate-900: #edf1f7;
+
+        --color-navy-50: #172944;
+        --color-navy-100: #1f3656;
+        --color-navy-200: #2e4a70;
+        --color-navy-300: #456896;
+        --color-navy-400: #6286b8;
+        --color-navy-500: #7f9fcc;
+        --color-navy-600: #9db6db;
+        --color-navy-700: #b9cbe6;
+        --color-navy-800: #d3dff0;
+        --color-navy-900: #e8eef7;
+        --color-navy-950: #f4f7fb;
+
+        --color-gold-50: #2a2210;
+        --color-gold-100: #3a2e12;
+        --color-gold-200: #5a4618;
+        --color-gold-600: #dcab34;
+        --color-gold-700: #e6c257;
+        --color-gold-800: #eed88a;
+        --color-gold-900: #f6ecc6;
+
+        --color-emerald-50: #0f2a20;
+        --color-emerald-100: #143528;
+        --color-emerald-200: #1d4a37;
+        --color-emerald-600: #34d399;
+        --color-emerald-700: #6ee7b7;
+        --color-emerald-800: #a7f3d0;
+        --color-emerald-900: #d1fae5;
+
+        --color-sky-50: #0c2536;
+        --color-sky-100: #10304a;
+        --color-sky-200: #164260;
+        --color-sky-600: #38bdf8;
+        --color-sky-700: #7dd3fc;
+
+        --color-rose-50: #2d1219;
+        --color-rose-100: #3d1720;
+        --color-rose-200: #55202d;
+        --color-rose-600: #fb7185;
+        --color-rose-700: #fda4af;
+        --color-rose-800: #fecdd3;
+        --color-rose-900: #ffe4e6;
+
+        --color-amber-50: #2b2008;
+        --color-amber-100: #3a2b0b;
+        --color-amber-200: #523c10;
+        --color-amber-700: #fcd34d;
+
+        --color-orange-50: #2d1a0b;
+        --color-orange-100: #3d220e;
+        --color-orange-200: #573014;
+        --color-orange-700: #fdba74;
+        --color-orange-900: #ffedd5;
+    }
+
+    body,
+    .panel,
+    .field {
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        body,
+        .panel,
+        .field {
+            transition: none;
+        }
     }
 }
 
@@ -63,17 +159,38 @@
     }
 
     .panel {
-        background-color: #fff;
+        background-color: var(--color-white);
         border: 1px solid var(--color-slate-200);
-        border-radius: 0.5rem;
+        border-radius: 0.75rem;
         box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    }
+
+    .dark .panel {
+        box-shadow: none;
+    }
+
+    /*
+     * Caution-tape stripe — the safety motif. Fixed gold on deep navy in both
+     * themes, like real hazard tape. Set --band to change the stripe width.
+     */
+    .hazard-stripe {
+        --band: 8px;
+        /* 1px soft edges keep the diagonals smooth instead of jagged. */
+        background-image: repeating-linear-gradient(
+            -45deg,
+            #dcab34 0,
+            #dcab34 calc(var(--band) - 1px),
+            #13233a var(--band),
+            #13233a calc(var(--band) * 2 - 1px),
+            #dcab34 calc(var(--band) * 2)
+        );
     }
 
     .field {
         width: 100%;
         border: 1px solid var(--color-slate-300);
-        border-radius: 0.375rem;
-        background-color: #fff;
+        border-radius: 0.5rem;
+        background-color: var(--color-white);
         padding: 0.5rem 0.75rem;
         font-size: 0.875rem;
         color: var(--color-navy-900);

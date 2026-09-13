@@ -1,7 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import Seal from '@/Components/Seal';
-import { AlertIcon, HomeIcon, LogoutIcon } from '@/Components/Icons';
+import ThemeToggle from '@/Components/ThemeToggle';
+import { AlertIcon, HomeIcon, LogoutIcon, UserIcon } from '@/Components/Icons';
 
 const NAV = [
     { href: '/', label: 'Dashboard', icon: HomeIcon, match: (p) => p === '/' },
@@ -19,10 +19,10 @@ function Clock() {
     const local = now.toLocaleTimeString('en-GB', { hour12: false, timeZone: 'Asia/Manila' });
 
     return (
-        <div className="hidden text-right sm:block">
-            <p className="label-mono !text-[0.6rem]">Local Time</p>
-            <p className="font-mono text-sm text-navy-800 tabular-nums">{local}</p>
-        </div>
+        <p className="hidden items-baseline gap-1.5 font-mono text-sm text-navy-800 tabular-nums lg:flex" title="Philippine time">
+            {local}
+            <span className="label-mono !text-[0.58rem]">PHT</span>
+        </p>
     );
 }
 
@@ -40,7 +40,7 @@ function Flash() {
 
     return (
         <div
-            className={`mb-5 flex items-start justify-between gap-4 rounded-md border px-4 py-3 text-sm ${
+            className={`mb-5 flex items-start justify-between gap-4 rounded-lg border px-4 py-3 text-sm ${
                 isError
                     ? 'border-rose-200 bg-rose-50 text-rose-800'
                     : 'border-emerald-200 bg-emerald-50 text-emerald-800'
@@ -54,114 +54,94 @@ function Flash() {
     );
 }
 
+function NavLinks({ currentPath, compact = false }) {
+    return NAV.map((item) => {
+        const Icon = item.icon;
+        const active = item.match ? item.match(currentPath) : currentPath.startsWith(item.href);
+
+        return (
+            <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    active ? 'bg-navy-800 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-navy-900'
+                }`}
+            >
+                {!compact && <Icon className="h-4 w-4" />}
+                {item.label}
+            </Link>
+        );
+    });
+}
+
 export default function AppLayout({ children }) {
     const { auth, app } = usePage().props;
     const currentPath = usePage().url.split('?')[0];
 
     return (
         <div className="min-h-screen bg-slate-100">
-            {/* Icon rail */}
-            <nav className="fixed inset-y-0 left-0 z-40 hidden w-16 flex-col items-center gap-1 border-r border-slate-200 bg-white py-4 lg:flex">
-                <Seal src="/img/wing-seal.png" label="15th Strike Wing" className="mb-3 h-9 w-9" />
-                {NAV.map((item) => {
-                    const Icon = item.icon;
-                    const active = item.match ? item.match(currentPath) : currentPath.startsWith(item.href);
-
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            title={item.label}
-                            aria-label={item.label}
-                            className={`group relative flex h-10 w-10 items-center justify-center rounded-lg transition ${
-                                active
-                                    ? 'bg-navy-800 text-white'
-                                    : 'text-slate-400 hover:bg-slate-100 hover:text-navy-700'
-                            }`}
-                        >
-                            <Icon />
-                            <span className="pointer-events-none absolute left-12 z-50 hidden rounded bg-navy-900 px-2 py-1 font-mono text-[0.65rem] whitespace-nowrap text-white group-hover:block">
-                                {item.label}
-                            </span>
-                        </Link>
-                    );
-                })}
-                <span className="mt-auto font-mono text-[0.6rem] tracking-widest text-slate-300 [writing-mode:vertical-rl]">
-                    15SW · SAFETY
-                </span>
-            </nav>
-
-            <div className="lg:pl-16">
-                <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                    <div className="flex items-center gap-4 px-4 py-3 sm:px-6">
+            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+                <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-2.5 sm:gap-6 sm:px-6">
+                    <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="15SW Safety — Dashboard">
                         <img
                             src="/img/safety-seal.jpg"
-                            alt="15SW Safety Office"
-                            className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+                            alt=""
+                            className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200"
                         />
-                        <div className="min-w-0 flex-1">
-                            <p className="label-mono !text-gold-600 !text-[0.6rem] truncate">
-                                Republic of the Philippines · Philippine Air Force
-                            </p>
-                            <h1 className="font-display truncate text-lg leading-tight font-bold tracking-wide text-navy-900 uppercase sm:text-xl">
+                        <span className="leading-tight">
+                            <span className="font-display block text-lg font-bold tracking-wide text-navy-900 uppercase">
                                 15SW Safety
-                            </h1>
-                            <p className="label-mono !text-[0.6rem] truncate">{app?.unit}</p>
-                        </div>
+                            </span>
+                            <span className="label-mono hidden !text-[0.58rem] sm:block">
+                                {app?.unit ?? 'Wing Safety Office'}
+                            </span>
+                        </span>
+                    </Link>
 
-                        <div className="hidden text-right md:block">
-                            <p className="label-mono !text-[0.6rem]">System Status</p>
-                            <p className="flex items-center justify-end gap-1.5 font-mono text-sm text-navy-800">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                Operational
-                            </p>
-                        </div>
+                    <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+                        <NavLinks currentPath={currentPath} />
+                    </nav>
 
+                    <div className="ml-auto flex items-center gap-1 sm:gap-2">
                         <Clock />
-
-                        <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
-                            <Link href="/account" className="group text-right" title="Account & password">
-                                <p className="label-mono !text-[0.6rem]">User</p>
-                                <p className="font-mono text-sm text-navy-800 group-hover:text-navy-600">
-                                    {auth?.user?.display_name}
-                                </p>
-                            </Link>
-                            <button
-                                type="button"
-                                title="Sign out"
-                                onClick={() => router.post('/logout')}
-                                className="rounded-md p-2 text-slate-400 transition hover:bg-slate-100 hover:text-rose-600"
-                            >
-                                <LogoutIcon />
-                            </button>
-                        </div>
+                        <ThemeToggle />
+                        <Link
+                            href="/account"
+                            title="Account & password"
+                            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-navy-800 transition hover:bg-slate-100"
+                        >
+                            <UserIcon className="h-5 w-5 text-slate-500" />
+                            <span className="hidden font-mono sm:inline">{auth?.user?.display_name}</span>
+                        </Link>
+                        <button
+                            type="button"
+                            title="Sign out"
+                            aria-label="Sign out"
+                            onClick={() => router.post('/logout')}
+                            className="rounded-lg p-2 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
+                        >
+                            <LogoutIcon />
+                        </button>
                     </div>
+                </div>
 
-                    {/* Compact nav for small screens */}
-                    <div className="flex gap-1 overflow-x-auto border-t border-slate-100 px-3 py-1.5 lg:hidden">
-                        {NAV.map((item) => (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className="label-mono shrink-0 rounded px-2 py-1 hover:bg-slate-100"
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
-                    </div>
-                </header>
+                {/* Small screens: the nav moves to its own row. */}
+                <nav className="flex gap-1 overflow-x-auto border-t border-slate-100 px-3 py-1.5 md:hidden" aria-label="Main">
+                    <NavLinks currentPath={currentPath} compact />
+                </nav>
+            </header>
 
-                <main className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6">
-                    <Flash />
-                    {children}
-                </main>
+            <main className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6">
+                <Flash />
+                {children}
+            </main>
 
-                <footer className="label-mono !text-[0.6rem] px-6 py-6 text-center leading-relaxed">
-                    15SW Safety v1.0 · For official safety use only · 15th Strike Wing, Philippine Air Force
-                    <br />
-                    Developed by the Office of the Directorate of Personnel, 15th Strike Wing
-                </footer>
-            </div>
+            <footer className="label-mono !text-[0.6rem] px-6 pt-2 pb-8 text-center leading-relaxed">
+                15SW Safety · For official safety use only · 15th Strike Wing, Philippine Air Force
+                <br />
+                Developed by the Office of the Directorate of Personnel, 15th Strike Wing
+            </footer>
         </div>
     );
 }
