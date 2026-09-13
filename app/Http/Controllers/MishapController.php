@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Mishap;
 use App\Support\HazardClassifier;
+use App\Support\MishapAttributes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,7 @@ class MishapController extends Controller
         ];
 
         $mishaps = Mishap::query()
+            ->with('correctiveActions')
             ->withCount('correctiveActions')
             ->latestFirst()
             ->when($filters['year'], fn ($q, $year) => $q->forYear($year))
@@ -54,6 +56,12 @@ class MishapController extends Controller
                 'types' => Mishap::TYPES,
                 'environments' => Mishap::ENVIRONMENTS,
                 'categories' => HazardClassifier::CATEGORIES,
+                'aircraft' => Mishap::AIRCRAFT,
+                'phases' => Mishap::PHASES,
+                'missions' => Mishap::MISSIONS,
+                'qualifications' => Mishap::QUALIFICATIONS,
+                'vehicle_types' => Mishap::VEHICLE_TYPES,
+                'rank_groups' => Mishap::RANK_GROUPS,
             ],
         ]);
     }
@@ -88,15 +96,30 @@ class MishapController extends Controller
             'mishap_type' => ['required', Rule::in(Mishap::TYPES)],
             'environment' => ['required', Rule::in(Mishap::ENVIRONMENTS)],
             'category' => ['nullable', Rule::in(HazardClassifier::CATEGORIES)],
+            'aircraft' => ['nullable', Rule::in(Mishap::AIRCRAFT)],
+            'phase' => ['nullable', Rule::in(Mishap::PHASES)],
+            'mission' => ['nullable', Rule::in(Mishap::MISSIONS)],
+            'qualification' => ['nullable', Rule::in(Mishap::QUALIFICATIONS)],
+            'vehicle_type' => ['nullable', Rule::in(Mishap::VEHICLE_TYPES)],
+            'rank_group' => ['nullable', Rule::in(Mishap::RANK_GROUPS)],
             'description' => ['required', 'string'],
             'corrective_action' => ['nullable', 'string'],
             'lesson_learned' => ['nullable', 'string'],
         ]);
 
-        // Left on "auto-detect"? Infer the category from the description so the
-        // record is never blank and the analysis stays complete.
+        // Left on "auto-detect"? Infer from the description so the record is
+        // never blank and the analysis stays complete.
         if (empty($data['category'])) {
             $data['category'] = HazardClassifier::primary($data['description']);
+        }
+        if (empty($data['rank_group'])) {
+            $data['rank_group'] = MishapAttributes::rankGroup($data['description']);
+        }
+        if (($data['environment'] ?? null) === Mishap::FLIGHT) {
+            $data['aircraft'] = $data['aircraft'] ?: MishapAttributes::aircraft($data['description']);
+            $data['phase'] = $data['phase'] ?: MishapAttributes::phase($data['description']);
+        } elseif (empty($data['vehicle_type'])) {
+            $data['vehicle_type'] = MishapAttributes::vehicleType($data['description']);
         }
 
         return $data;
@@ -105,6 +128,8 @@ class MishapController extends Controller
     /** @return array<string, mixed> */
     private function present(Mishap $m): array
     {
+        $caps = $m->relationLoaded('correctiveActions') ? $m->correctiveActions : collect();
+
         return [
             'id' => $m->id,
             'mishap_date' => $m->mishap_date->format('Y-m-d'),
@@ -113,10 +138,25 @@ class MishapController extends Controller
             'mishap_type' => $m->mishap_type,
             'environment' => $m->environment,
             'category' => $m->category,
+            'aircraft' => $m->aircraft,
+            'phase' => $m->phase,
+            'mission' => $m->mission,
+            'qualification' => $m->qualification,
+            'vehicle_type' => $m->vehicle_type,
+            'rank_group' => $m->rank_group,
             'description' => $m->description,
             'corrective_action' => $m->corrective_action,
             'lesson_learned' => $m->lesson_learned,
             'cap_count' => $m->corrective_actions_count ?? 0,
+            // Causal factors + CAPS compliance roll-up, shown on the records table.
+            'causal_factors' => $caps->pluck('cause_factor')->filter()->unique()->values()->all(),
+            'caps_summary' => $caps->groupBy('status')->map->count(),
+            'caps_open' => $caps->where('status', '!=', 'complied')->map(fn ($c) => [
+                'status' => $c->status,
+                'opr' => $c->opr,
+                'follow_up' => $c->follow_up_name,
+                'action' => $c->corrective_action,
+            ])->values()->all(),
         ];
     }
 }

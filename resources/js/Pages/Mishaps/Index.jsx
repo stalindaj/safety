@@ -5,7 +5,25 @@ import { Badge, Button, EmptyState, Field, Modal, PageHeader, Panel, Table } fro
 
 const TYPE_TONE = { accident: 'red', incident: 'amber', event: 'neutral' };
 const ENV_TONE = { flight: 'sky', ground: 'navy' };
+const CAP_STATUS = {
+    complied: { label: 'Complied', tone: 'green' },
+    ongoing: { label: 'Ongoing', tone: 'sky' },
+    pending: { label: 'Not Complied', tone: 'amber' },
+    approved: { label: 'Approved', tone: 'navy' },
+    as_required: { label: 'As Required', tone: 'neutral' },
+};
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+
+function OptSelect({ label, value, onChange, options, error, placeholder = 'Not specified' }) {
+    return (
+        <Field label={label} error={error}>
+            <select className="field" value={value} onChange={(e) => onChange(e.target.value)}>
+                <option value="">{placeholder}</option>
+                {options.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+        </Field>
+    );
+}
 
 function MishapForm({ mishap, options, onDone }) {
     const editing = Boolean(mishap);
@@ -15,6 +33,12 @@ function MishapForm({ mishap, options, onDone }) {
         mishap_type: mishap?.mishap_type ?? 'incident',
         environment: mishap?.environment ?? 'ground',
         category: mishap?.category ?? '',
+        aircraft: mishap?.aircraft ?? '',
+        phase: mishap?.phase ?? '',
+        mission: mishap?.mission ?? '',
+        qualification: mishap?.qualification ?? '',
+        vehicle_type: mishap?.vehicle_type ?? '',
+        rank_group: mishap?.rank_group ?? '',
         description: mishap?.description ?? '',
         corrective_action: mishap?.corrective_action ?? '',
         lesson_learned: mishap?.lesson_learned ?? '',
@@ -59,7 +83,7 @@ function MishapForm({ mishap, options, onDone }) {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Classification" error={errors.mishap_type}>
+                <Field label="Mishap" error={errors.mishap_type}>
                     <select
                         className="field"
                         value={data.mishap_type}
@@ -72,7 +96,7 @@ function MishapForm({ mishap, options, onDone }) {
                         ))}
                     </select>
                 </Field>
-                <Field label="Environment" error={errors.environment}>
+                <Field label="Type" error={errors.environment}>
                     <select
                         className="field"
                         value={data.environment}
@@ -87,7 +111,7 @@ function MishapForm({ mishap, options, onDone }) {
                 </Field>
             </div>
 
-            <Field label="Category / Hazard Type" error={errors.category}>
+            <Field label="Safety Occurrence" error={errors.category}>
                 <select
                     className="field"
                     value={data.category}
@@ -101,6 +125,19 @@ function MishapForm({ mishap, options, onDone }) {
                     ))}
                 </select>
             </Field>
+
+            {/* Deeper taxonomy — flight vs ground specifics, plus rank (both). */}
+            {data.environment === 'flight' ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <OptSelect label="Aircraft" value={data.aircraft} onChange={(v) => setData('aircraft', v)} options={options.aircraft} error={errors.aircraft} placeholder="Auto-detect from description" />
+                    <OptSelect label="Phase of Flight" value={data.phase} onChange={(v) => setData('phase', v)} options={options.phases} error={errors.phase} placeholder="Auto-detect from description" />
+                    <OptSelect label="Type of Mission" value={data.mission} onChange={(v) => setData('mission', v)} options={options.missions} error={errors.mission} />
+                    <OptSelect label="Qualification Involved" value={data.qualification} onChange={(v) => setData('qualification', v)} options={options.qualifications} error={errors.qualification} />
+                </div>
+            ) : (
+                <OptSelect label="Vehicle Type" value={data.vehicle_type} onChange={(v) => setData('vehicle_type', v)} options={options.vehicle_types} error={errors.vehicle_type} placeholder="Auto-detect from description" />
+            )}
+            <OptSelect label="Rank Involved" value={data.rank_group} onChange={(v) => setData('rank_group', v)} options={options.rank_groups} error={errors.rank_group} placeholder="Auto-detect from description" />
 
             <Field label="Description" error={errors.description}>
                 <textarea
@@ -221,7 +258,7 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                         </select>
                     </label>
                     <label className="block">
-                        <span className="label-mono mb-1 block">Classification</span>
+                        <span className="label-mono mb-1 block">Mishap</span>
                         <select
                             className="field !py-1.5"
                             value={filters.type ?? ''}
@@ -236,7 +273,7 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                         </select>
                     </label>
                     <label className="block">
-                        <span className="label-mono mb-1 block">Environment</span>
+                        <span className="label-mono mb-1 block">Type</span>
                         <select
                             className="field !py-1.5"
                             value={filters.environment ?? ''}
@@ -251,13 +288,13 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                         </select>
                     </label>
                     <label className="block">
-                        <span className="label-mono mb-1 block">Category</span>
+                        <span className="label-mono mb-1 block">Safety Occurrence</span>
                         <select
                             className="field !py-1.5"
                             value={filters.category ?? ''}
                             onChange={(e) => applyFilter({ category: e.target.value || null })}
                         >
-                            <option value="">All categories</option>
+                            <option value="">All occurrences</option>
                             {options.categories.map((c) => (
                                 <option key={c} value={c}>
                                     {c}
@@ -281,56 +318,98 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                     <EmptyState>No mishap records match these filters.</EmptyState>
                 ) : (
                     <div className="p-2 sm:p-3">
-                        <Table head={['Date', 'Location', 'Type', 'Environment', 'Category', 'Description', '']}>
-                            {mishaps.data.map((m) => (
-                                <tr key={m.id} className="align-top hover:bg-slate-50">
-                                    <td className="px-3 py-2.5 font-mono text-xs whitespace-nowrap text-navy-800">
-                                        {m.display_date}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-sm text-navy-900">{m.location ?? '—'}</td>
-                                    <td className="px-3 py-2.5">
-                                        <Badge tone={TYPE_TONE[m.mishap_type]}>{m.mishap_type}</Badge>
-                                    </td>
-                                    <td className="px-3 py-2.5">
-                                        <Badge tone={ENV_TONE[m.environment]}>{m.environment}</Badge>
-                                    </td>
-                                    <td className="px-3 py-2.5 text-xs whitespace-nowrap text-slate-600">
-                                        {m.category ?? '—'}
-                                    </td>
-                                    <td className="max-w-md px-3 py-2.5 text-sm text-slate-600">
-                                        <button
-                                            type="button"
-                                            className="text-left"
-                                            onClick={() => setExpanded(expanded === m.id ? null : m.id)}
-                                        >
-                                            <span className={expanded === m.id ? '' : 'line-clamp-2'}>{m.description}</span>
-                                        </button>
-                                    </td>
-                                    <td className="px-3 py-2.5 whitespace-nowrap text-right">
-                                        <Link
-                                            href={`/mishaps/${m.id}/plan`}
-                                            className="label-mono !text-gold-700 hover:!text-gold-800 px-1.5"
-                                            title="Corrective Action Plan (CAPS)"
-                                        >
-                                            CAPS{m.cap_count > 0 ? ` (${m.cap_count})` : ''}
-                                        </Link>
-                                        <button
-                                            type="button"
-                                            onClick={() => setEditing(m)}
-                                            className="label-mono !text-navy-600 hover:!text-navy-900 px-1.5"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => remove(m)}
-                                            className="label-mono !text-rose-500 hover:!text-rose-700 px-1.5"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                        <Table
+                            className="[&>table]:min-w-[1400px]"
+                            head={['Date', 'Location', 'Type', 'Mishap', 'Safety Occurrence', 'Description', 'Causal Factor', 'CAPS', 'Lessons Learned', '']}
+                        >
+                            {mishaps.data.map((m) => {
+                                const open = expanded === m.id;
+                                const statuses = Object.entries(m.caps_summary ?? {});
+                                return (
+                                    <tr key={m.id} className="align-top hover:bg-slate-50">
+                                        <td className="px-3 py-2.5 font-mono text-xs whitespace-nowrap text-navy-800">
+                                            {m.display_date}
+                                        </td>
+                                        <td className="px-3 py-2.5 text-sm text-navy-900">{m.location ?? '—'}</td>
+                                        <td className="px-3 py-2.5">
+                                            <Badge tone={ENV_TONE[m.environment]}>{m.environment}</Badge>
+                                        </td>
+                                        <td className="px-3 py-2.5">
+                                            <Badge tone={TYPE_TONE[m.mishap_type]}>{m.mishap_type}</Badge>
+                                        </td>
+                                        <td className="px-3 py-2.5 text-xs text-slate-600">
+                                            {m.category ?? '—'}
+                                        </td>
+                                        <td className="max-w-lg px-3 py-2.5 text-sm text-slate-600">
+                                            <button
+                                                type="button"
+                                                className="text-left"
+                                                onClick={() => setExpanded(open ? null : m.id)}
+                                            >
+                                                <span className={open ? '' : 'line-clamp-2'}>{m.description}</span>
+                                            </button>
+                                        </td>
+                                        <td className="px-3 py-2.5 text-xs text-slate-600">
+                                            {m.causal_factors?.length
+                                                ? m.causal_factors.map((f, i) => <div key={i}>{f}</div>)
+                                                : '—'}
+                                        </td>
+                                        <td className="min-w-56 px-3 py-2.5">
+                                            <Link
+                                                href={`/mishaps/${m.id}/plan`}
+                                                className="label-mono !text-gold-700 hover:!text-gold-800"
+                                                title="Corrective Action Plan (CAPS)"
+                                            >
+                                                CAPS{m.cap_count > 0 ? ` (${m.cap_count})` : ''}
+                                            </Link>
+                                            {open && m.cap_count > 0 && (
+                                                <div className="mt-2">
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {statuses.map(([s, n]) => (
+                                                            <Badge key={s} tone={CAP_STATUS[s]?.tone ?? 'neutral'}>
+                                                                {n} {CAP_STATUS[s]?.label ?? cap(s)}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                    {m.caps_open?.length > 0 && (
+                                                        <ul className="mt-2 space-y-1.5">
+                                                            {m.caps_open.map((c, i) => (
+                                                                <li key={i} className="text-[0.7rem] leading-snug text-slate-600">
+                                                                    <span className="font-semibold text-navy-800">{c.opr || 'Unassigned'}</span>
+                                                                    <span className="text-slate-400"> · {CAP_STATUS[c.status]?.label ?? cap(c.status)}</span>
+                                                                    {c.follow_up && <div className="text-slate-500">Follow-up: {c.follow_up}</div>}
+                                                                    {c.action && <div className="text-slate-600">{c.action}</div>}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="max-w-xs px-3 py-2.5 text-xs text-slate-600">
+                                            {m.lesson_learned
+                                                ? <span className={open ? '' : 'line-clamp-2'}>{m.lesson_learned}</span>
+                                                : '—'}
+                                        </td>
+                                        <td className="px-3 py-2.5 whitespace-nowrap text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditing(m)}
+                                                className="label-mono !text-navy-600 hover:!text-navy-900 px-1.5"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => remove(m)}
+                                                className="label-mono !text-rose-500 hover:!text-rose-700 px-1.5"
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </Table>
                         <Pagination links={mishaps.links} />
                     </div>

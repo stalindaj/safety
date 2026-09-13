@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Database\Schema\Builder;
+use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -13,7 +14,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Local dev on Windows: `php artisan serve` strips TEMP/TMP from the PHP
+        // server's environment, so file uploads and large POSTs fail with
+        // "Unable to create temporary file". Pass them through. (cPanel is unaffected.)
+        if ($this->app->runningInConsole()) {
+            ServeCommand::$passthroughVariables = [...ServeCommand::$passthroughVariables, 'TEMP', 'TMP'];
+        }
     }
 
     /**

@@ -59,8 +59,31 @@ const GEOCODE = {
 
 const radius = (count) => 3 + Math.sqrt(count) * 2.4;
 
+// Region bounding boxes (lat/lng). "All" = the full projected map.
+const REGIONS = {
+    All: null,
+    Luzon: { latMin: 12.2, latMax: 19.6, lngMin: 119.3, lngMax: 124.6 },
+    Visayas: { latMin: 8.8, latMax: 12.6, lngMin: 121.5, lngMax: 126.2 },
+    Mindanao: { latMin: 4.5, latMax: 10.2, lngMin: 121.3, lngMax: 127.0 },
+};
+
+// Crop the shared projection to a region → SVG viewBox {x,y,w,h}.
+const regionBox = (r) => {
+    if (!r) return { x: 0, y: 0, w: VB.w, h: VB.h };
+    const tl = project(r.latMax, r.lngMin);
+    const br = project(r.latMin, r.lngMax);
+    const pad = 10;
+    return { x: tl.x - pad, y: tl.y - pad, w: br.x - tl.x + pad * 2, h: br.y - tl.y + pad * 2 };
+};
+
 export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect }) {
     const [hover, setHover] = useState(null);
+    const [region, setRegion] = useState('All');
+
+    const box = regionBox(REGIONS[region]);
+    // Keep markers a consistent on-screen size as the viewBox zooms in.
+    const zoom = box.w / VB.w;
+    const inBox = (p) => p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h;
 
     const placed = locations
         .filter((l) => GEOCODE[l.location])
@@ -68,20 +91,38 @@ export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect
             const [lat, lng] = GEOCODE[l.location];
             return { ...l, ...project(lat, lng) };
         })
+        .filter(inBox)
         .sort((a, b) => b.total - a.total); // biggest first → drawn underneath
 
+    const shown = placed.reduce((s, l) => s + l.total, 0);
     const offMap =
         locations.filter((l) => !GEOCODE[l.location]).reduce((s, l) => s + l.total, 0) + unlocated;
 
     return (
         <div className="relative">
+            <div className="mb-2 flex flex-wrap justify-center gap-1">
+                {Object.keys(REGIONS).map((name) => (
+                    <button
+                        key={name}
+                        type="button"
+                        onClick={() => setRegion(name)}
+                        className={`rounded-md px-2.5 py-1 font-mono text-[0.65rem] tracking-wide uppercase transition ${
+                            region === name
+                                ? 'bg-navy-800 text-white'
+                                : 'bg-white text-navy-700 ring-1 ring-slate-300 ring-inset hover:bg-slate-50'
+                        }`}
+                    >
+                        {name}
+                    </button>
+                ))}
+            </div>
             <svg
-                viewBox={`0 0 ${VB.w} ${VB.h}`}
+                viewBox={`${box.x} ${box.y} ${box.w} ${box.h}`}
                 className="mx-auto block h-auto w-full max-w-[380px]"
                 role="img"
-                aria-label="Map of mishap locations across the Philippines"
+                aria-label={`Map of mishap locations — ${region}`}
             >
-                <path d={PH_PATH} fill="#eaf0f7" stroke="#bcd0e6" strokeWidth="1.2" />
+                <path d={PH_PATH} fill="#eaf0f7" stroke="#bcd0e6" strokeWidth={1.2 * zoom} />
                 {placed.map((l, i) => {
                     const top = i === 0;
                     return (
@@ -95,11 +136,11 @@ export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect
                             <circle
                                 cx={l.x}
                                 cy={l.y}
-                                r={radius(l.total)}
+                                r={radius(l.total) * zoom}
                                 fill={top ? '#c8931f' : '#33578b'}
                                 fillOpacity="0.6"
                                 stroke={top ? '#855b17' : '#152840'}
-                                strokeWidth="1"
+                                strokeWidth={zoom}
                             />
                             {l.total >= 5 && (
                                 <text
@@ -107,7 +148,7 @@ export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect
                                     y={l.y}
                                     textAnchor="middle"
                                     dominantBaseline="central"
-                                    fontSize="10"
+                                    fontSize={10 * zoom}
                                     fontFamily="IBM Plex Mono, monospace"
                                     fontWeight="700"
                                     fill="#fff"
@@ -122,11 +163,16 @@ export default function PhilippinesMap({ locations = [], unlocated = 0, onSelect
             </svg>
 
             {hover && (
-                <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-navy-900 px-2.5 py-1 font-mono text-xs text-white shadow">
+                <div className="pointer-events-none absolute left-2 top-10 rounded-md bg-navy-900 px-2.5 py-1 font-mono text-xs text-white shadow">
                     {hover.location} · {hover.total}
                 </div>
             )}
 
+            {region !== 'All' && (
+                <p className="label-mono mt-1 text-center !text-[0.6rem]">
+                    {shown} mishap{shown === 1 ? '' : 's'} shown in {region}
+                </p>
+            )}
             {offMap > 0 && (
                 <p className="label-mono mt-1 text-center !text-[0.6rem]">
                     {offMap} at unspecified / off-map location{offMap === 1 ? '' : 's'}

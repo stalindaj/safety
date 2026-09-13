@@ -115,6 +115,10 @@ DB_ENGINE=InnoDB
 
 SETUP_TOKEN=paste-a-long-random-string-here
 
+# Lets the forecast notebook (Google Colab) read records and save forecasts.
+# Use a different long random string; put the same value in Colab's Secrets.
+MODEL_API_TOKEN=another-long-random-string
+
 FORCE_HTTPS=false
 SESSION_SECURE_COOKIE=false
 ```
@@ -174,10 +178,18 @@ SESSION_SECURE_COOKIE=true
 Doing this before the certificate exists locks you out — the secure cookie is
 never sent over plain HTTP, so login silently fails.
 
-### 2.10 (optional) PHP limits
+### 2.10 PHP limits and photo storage
 
-This app has no file uploads, so the stock cPanel PHP limits are fine. No
-MultiPHP INI changes are required.
+CAPS takes up to 3 proof photos per corrective action. The browser shrinks
+each photo to about 1600 px (usually under 1 MB) before upload, and the server
+rejects anything over 5 MB. Check cPanel → **Select PHP Version → Options**:
+
+- `upload_max_filesize` at least `8M`
+- `post_max_size` at least `20M`
+
+Photos are saved in `storage/app/private/caps/` — outside `public/`, served
+only to signed-in users. That folder must be writable (it is by default).
+It is **not** in git, so include it in your cPanel backups.
 
 ---
 

@@ -1,7 +1,7 @@
 # 15SW Safety — Progress & Handoff
 
 > Living status file so work can continue in a new chat (or a new laptop)
-> without losing context. Last updated: 2026-08-26.
+> without losing context. Last updated: 2026-09-13.
 
 ## What this is
 **15SW Safety** — the 15th Strike Wing Wing Safety Office platform. The app is
@@ -72,6 +72,51 @@ PATH via Herd (`~/.config/herd/bin`), not Git Bash.
 - UI: `/mishaps/{id}/plan` (`Mishaps/Plan.jsx`, `CorrectiveActionController`) —
   per-mishap plan with status summary + add/edit/delete rows; "Plan (N)" link in
   the records table. **Slice 2 (status tracking board across all plans) not built.**
+
+## CAPS follow-up + proof — DONE (2026-09-13)
+Workflow (per the user): mishap happens → safety board investigates (outside
+the app) → record entered → board's report goes to higher office → it returns
+recommendations = CAPS rows → staff act on them → proof → Complied.
+- Each CAP row now has a **follow-up person** under OPR/UPR (rank + name,
+  contact number, email) and a **Proof / Intervention** section (what was done
+  + up to **3 photos**).
+- **Complied needs proof:** the server rejects `status=complied` unless at least
+  one photo is on file (also blocks removing the last photo of a complied row).
+  Older rows that were already Complied show a "No proof on file" badge.
+- Photos: shrunk in the browser to ≤1600px JPEG, max 5 MB server-side, stored on
+  the private disk (`storage/app/private/caps/{id}/`), served only to signed-in
+  users via `/cap-proofs/{id}`. Deleting a CAP row or mishap deletes its photos.
+- Table `corrective_action_proofs`; model `CorrectiveActionProof`.
+
+## Forecast notebook online (Google Colab) — DONE (2026-09-13)
+- The app exposes a token-protected link: `GET /api/model/data` (mishap dates,
+  type, environment, category, aircraft + sortie dates — no descriptions,
+  names or crew) and `POST /api/model/forecasts` (upserts the weekly rows).
+  Guard: `MODEL_API_TOKEN` in `.env` (blank = link off), throttled 30/min.
+- `notebooks/safety_forecast.ipynb` was rebuilt around **one button cell**,
+  "▶ Update the 15SW Safety app" (Colab form: code hidden, dropdowns for the
+  base-rate period — default **Last 5 years** — El Niño status and weeks ahead).
+  One press: read records → base rate + conditions → save to the app. It runs
+  **online** when `APP_URL` + `MODEL_API_TOKEN` are set (Colab Secrets or env
+  vars), otherwise **offline** against local SQLite. It saves every week of the
+  current year **plus up to 12 weeks ahead** (calendar-known conditions only),
+  so the dashboard still has "this week" if an update is missed. Optional cells
+  below: base rate by year, and the walk-forward model check.
+- Free Colab can't run on a timer — someone presses ▶ weekly. Fully automatic
+  needs Colab Pro+ (scheduled notebooks) or Colab Enterprise (Google Cloud
+  schedules; pass APP_URL/MODEL_API_TOKEN as env vars there).
+- Colab can only reach the **live cPanel site**, not localhost. On production:
+  add `MODEL_API_TOKEN` to `.env`, then rebuild the config + route caches
+  (visit `/setup/{token}` with the token restored, or delete
+  `bootstrap/cache/config.php` and `routes-v7.php`).
+- `parse_schedule.py` (Flight Order PDFs) still runs on the laptop.
+- The **night / pre-dawn departure** flag was removed at the user's request from
+  the notebook's weekly conditions. The link sends sortie dates only.
+- The **Daily Flight Brief** page and its nav link were removed at the user's
+  request (2026-09-13). The `flight_schedules` table, `FlightSchedule` model and
+  `parse_schedule.py` stay — the notebook still counts sorties per week.
+- Local dev: `AppServiceProvider` passes TEMP/TMP through `php artisan serve`
+  (Windows strips them, which silently broke uploads and large POSTs).
 
 ## NOT done yet / next steps
 1. **Go live on cPanel** — prepared but not executed. Plan uses subdomain/folder/

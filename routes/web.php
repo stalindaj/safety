@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/mishaps/{mishap}/plan', [CorrectiveActionController::class, 'store'])->name('mishaps.plan.store');
     Route::put('/corrective-actions/{correctiveAction}', [CorrectiveActionController::class, 'update'])->name('corrective-actions.update');
     Route::delete('/corrective-actions/{correctiveAction}', [CorrectiveActionController::class, 'destroy'])->name('corrective-actions.destroy');
+    Route::get('/cap-proofs/{proof}', [CorrectiveActionController::class, 'photo'])->name('cap-proofs.show');
 
     // Account — change your own password.
     Route::get('/account', [ProfileController::class, 'edit'])->name('account.edit');

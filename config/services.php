@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    // Link for the forecast notebook (Google Colab or a laptop). Blank = off.
+    'model_api' => [
+        'token' => env('MODEL_API_TOKEN', ''),
+    ],
+
 ];

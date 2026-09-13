@@ -7,6 +7,7 @@ import {
     Legend,
     Line,
     LineChart,
+    ReferenceLine,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -108,6 +109,9 @@ const ENV_TONE = { flight: 'sky', ground: 'navy' };
 
 // Plain-language risk bands for the weekly forecast (worst → best).
 const RISK_BAND = {
+    // Default: the honest historical rate. Week-to-week prediction was retired
+    // after walk-forward validation showed no feature set beat the base rate.
+    baseline: { label: 'Base rate', dot: '', tile: 'bg-navy-50 ring-navy-100', text: 'text-navy-800' },
     high: { label: 'High', dot: '🔴', tile: 'bg-rose-50 ring-rose-100', text: 'text-rose-700' },
     elevated: { label: 'Elevated', dot: '🟠', tile: 'bg-orange-50 ring-orange-100', text: 'text-orange-700' },
     moderate: { label: 'Moderate', dot: '🟡', tile: 'bg-amber-50 ring-amber-100', text: 'text-amber-700' },
@@ -151,14 +155,149 @@ function LocationDetail({ items }) {
     );
 }
 
+/* Safety Performance Indicator — ICAO Doc 9859 §4.4.5 style trigger levels.
+   Detects an abnormal rate; it does not predict individual events. */
+const SPI_STATUS = {
+    normal: { label: 'Normal', tile: 'bg-emerald-50 ring-emerald-100', text: 'text-emerald-700' },
+    caution: { label: 'Caution', tile: 'bg-amber-50 ring-amber-100', text: 'text-amber-700' },
+    alert: { label: 'Alert', tile: 'bg-orange-50 ring-orange-100', text: 'text-orange-700' },
+    critical: { label: 'Critical', tile: 'bg-rose-50 ring-rose-100', text: 'text-rose-700' },
+};
+function SpiPanel({ spi }) {
+    if (!spi || !spi.series?.length) return null;
+    const st = SPI_STATUS[spi.status] ?? SPI_STATUS.normal;
+    const L = spi.levels;
+    return (
+        <Panel title={`Safety Performance Indicator — rolling ${spi.window_days}-day mishap count`} className="mb-5">
+            <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
+                <div className={`self-start rounded-lg p-4 text-center ring-1 ring-inset ${st.tile}`}>
+                    <p className="label-mono !text-[0.6rem]">Current status</p>
+                    <p className={`font-display mt-1 text-3xl font-bold ${st.text}`}>{st.label}</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                        {spi.current} mishap{spi.current === 1 ? '' : 's'} in the last {spi.window_days} days
+                    </p>
+                    <div className="mt-3 space-y-0.5 border-t border-white/60 pt-2 text-left font-mono text-[0.65rem] text-slate-600">
+                        <p>normal (mean) · {L.mean}</p>
+                        <p>caution +1σ · {L.caution}</p>
+                        <p className="text-orange-700">alert +2σ · {L.alert}</p>
+                        <p className="text-rose-700">critical +3σ · {L.critical}</p>
+                    </div>
+                </div>
+
+                <div className="min-w-0">
+                    <p className="mb-2 text-sm text-slate-600">
+                        Trigger levels are the historical mean ({spi.mean}) plus multiples of the standard
+                        deviation ({spi.sd}) — the method ICAO prescribes for safety triggers.
+                    </p>
+                    <div className="h-52">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={spi.series} margin={{ top: 8, right: 16, bottom: 4, left: -20 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    tick={axis}
+                                    tickLine={false}
+                                    axisLine={{ stroke: '#e2e8f0' }}
+                                    interval={Math.ceil(spi.series.length / 8)}
+                                    tickFormatter={(d) => String(d).slice(0, 7)}
+                                />
+                                <YAxis tick={axis} tickLine={false} axisLine={false} allowDecimals={false} width={28} />
+                                <Tooltip contentStyle={tip} formatter={(v) => [`${v} mishaps`, `${spi.window_days}-day count`]} />
+                                <ReferenceLine y={L.mean} stroke="#94a3b8" strokeDasharray="4 4" />
+                                <ReferenceLine y={L.alert} stroke="#ea7317" strokeDasharray="6 3" />
+                                <ReferenceLine y={L.critical} stroke="#e11d48" strokeDasharray="6 3" />
+                                <Line type="monotone" dataKey="value" stroke={NAVY} strokeWidth={2} dot={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            {spi.breaches?.length > 0 && (
+                <div className="mt-4 border-t border-slate-100 pt-3">
+                    <p className="label-mono mb-2 !text-[0.6rem]">Periods that breached the alert level</p>
+                    <ul className="flex flex-wrap gap-2">
+                        {spi.breaches.map((b, i) => (
+                            <li key={i} className="rounded-md bg-orange-50 px-2.5 py-1 text-xs text-orange-900 ring-1 ring-orange-200 ring-inset">
+                                {b.from} → {b.to} · peak {b.peak}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            <p className="label-mono mt-3 !text-[0.55rem] !text-slate-400">
+                Method: ICAO Doc 9859 (SMM 4th ed) §4.4.5 — trigger levels from the population standard
+                deviation of preceding data points. Detects abnormal rates; does not predict individual events.
+            </p>
+        </Panel>
+    );
+}
+
+/* A titled list of proportional bars with an auto-generated insight line. */
+function BreakdownPanel({ title, items, unit = 'of the view' }) {
+    if (!items.length) return null;
+    const max = Math.max(...items.map((i) => i.count));
+    const top = items[0];
+    return (
+        <Panel title={title}>
+            <p className="mb-3 text-sm text-slate-600">
+                <span className="font-semibold text-navy-900">{top.label}</span> leads — {top.count} {unit} ({top.pct}%).
+            </p>
+            <div className="divide-y divide-slate-100">
+                {items.map((c) => <HazardBar key={c.label} {...c} max={max} highlight={false} />)}
+            </div>
+        </Panel>
+    );
+}
+
+const STATUS_TONE = { complied: 'green', ongoing: 'sky', pending: 'amber', approved: 'navy', as_required: 'neutral' };
+function CapsPanel({ caps }) {
+    if (!caps || !caps.total) return null;
+    const statuses = Object.entries(caps.by_status ?? {});
+    const oprs = Object.entries(caps.by_opr ?? {});
+    const maxOpr = Math.max(1, ...oprs.map(([, c]) => c));
+    const done = caps.by_status?.complied ?? 0;
+    const compliedPct = Math.round((done / caps.total) * 100);
+    return (
+        <Panel title="Corrective Actions (CAPS) — Status & Ownership" className="mb-5">
+            <p className="mb-4 text-sm text-slate-600">
+                {caps.total} tracked corrective action{caps.total === 1 ? '' : 's'} — {compliedPct}% complied.
+            </p>
+            <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                    <p className="label-mono mb-2 !text-[0.6rem]">By status</p>
+                    <div className="flex flex-wrap gap-2">
+                        {statuses.map(([s, c]) => (
+                            <Badge key={s} tone={STATUS_TONE[s] ?? 'neutral'}>{c} {cap(s.replace('_', ' '))}</Badge>
+                        ))}
+                    </div>
+                </div>
+                <div>
+                    <p className="label-mono mb-2 !text-[0.6rem]">Actions by OPR / UPR (top)</p>
+                    {oprs.length === 0 ? <p className="text-sm text-slate-500">No OPR recorded.</p> : (
+                        <div className="divide-y divide-slate-100">
+                            {oprs.map(([o, c], i) => (
+                                <HazardBar key={o} label={o} count={c} pct={Math.round((c / caps.total) * 100)} max={maxOpr} highlight={i === 0} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </Panel>
+    );
+}
+
 /* ── main ─────────────────────────────────────────────────────────────── */
-export default function Dashboard({ records, current_year: currentYear, years, span, today, risk_forecasts: riskForecasts = [] }) {
+export default function Dashboard({ records, current_year: currentYear, years, span, today, risk_forecasts: riskForecasts = [], caps = {}, spi = null }) {
     const [type, setType] = useState('all'); // all | accident | incident
     const [env, setEnv] = useState('all'); // all | ground | flight
     const [monthlyYear, setMonthlyYear] = useState(currentYear);
     const [mapYear, setMapYear] = useState('all');
     const [loc, setLoc] = useState(null);
     const [weekIdx, setWeekIdx] = useState(-1); // -1 = default to the week containing today
+    const [analysisScope, setAnalysisScope] = useState('all'); // all | month
+    const [analysisMonth, setAnalysisMonth] = useState(''); // 'YYYY-M'
 
     const filtered = useMemo(
         () => records.filter((r) => (type === 'all' || r.type === type) && (env === 'all' || r.environment === env)),
@@ -210,10 +349,13 @@ export default function Dashboard({ records, current_year: currentYear, years, s
         const events = filtered.filter((r) => r.type === 'event').length;
         const flight = filtered.filter((r) => r.environment === 'flight').length;
         const ground = total - flight;
-        const ytd = filtered.filter((r) => r.year === currentYear).length;
+        const thisYear = filtered.filter((r) => r.year === currentYear);
+        const ytd = thisYear.length;
+        const ytdFlight = thisYear.filter((r) => r.environment === 'flight').length;
+        const ytdGround = ytd - ytdFlight;
 
         return {
-            total, yearlyTrend, monthly, categories, locations, accidents, incidents, events, flight, ground, ytd,
+            total, yearlyTrend, monthly, categories, locations, accidents, incidents, events, flight, ground, ytd, ytdFlight, ytdGround,
             topLocation: locations[0]?.location ?? '—',
             peakYear, peakCount: peakYear ? byYear[peakYear] : 0,
             avgPerYear: years.length ? Math.round((total / years.length) * 10) / 10 : 0,
@@ -222,6 +364,46 @@ export default function Dashboard({ records, current_year: currentYear, years, s
             unlocated: filtered.filter((r) => !r.location).length,
         };
     }, [filtered, years, currentYear, monthlyYear]);
+
+    // Months that actually have records, newest first (for the Monthly picker).
+    const monthsAvail = useMemo(() => {
+        const seen = new Map();
+        for (const r of records) { const k = `${r.year}-${r.month}`; if (!seen.has(k)) seen.set(k, { year: r.year, month: r.month }); }
+        return [...seen.values()].sort((a, b) => b.year - a.year || b.month - a.month);
+    }, [records]);
+
+    // Records feeding the analysis panels — all-time, or scoped to one month.
+    const deepBase = useMemo(() => {
+        if (analysisScope !== 'month' || !analysisMonth) return filtered;
+        const [y, mo] = analysisMonth.split('-').map(Number);
+        return filtered.filter((r) => r.year === y && r.month === mo);
+    }, [filtered, analysisScope, analysisMonth]);
+
+    // Deeper taxonomy breakdowns (respect the active filter + analysis scope).
+    const deep = useMemo(() => {
+        const grp = (arr, key) => {
+            const map = {};
+            for (const r of arr) { const k = key(r); if (!k) continue; map[k] = (map[k] || 0) + 1; }
+            const t = Object.values(map).reduce((a, b) => a + b, 0);
+            return Object.entries(map)
+                .map(([label, count]) => ({ label, count, pct: t ? Math.round((count / t) * 100) : 0 }))
+                .sort((a, b) => b.count - a.count);
+        };
+        const flight = deepBase.filter((r) => r.environment === 'flight');
+        const ground = deepBase.filter((r) => r.environment === 'ground');
+        // Rank: always list every group (EP/NCO/Officer/Civilian), even at 0.
+        const RANK_ORDER = ['EP', 'NCO', 'Officer', 'Civilian'];
+        const rankBase = grp(deepBase, (r) => r.rank_group);
+        const present = new Set(rankBase.map((b) => b.label));
+        const rank = [...rankBase, ...RANK_ORDER.filter((l) => !present.has(l)).map((label) => ({ label, count: 0, pct: 0 }))];
+        return {
+            aircraft: grp(flight, (r) => r.aircraft),
+            phase: grp(flight, (r) => r.phase),
+            vehicle: grp(ground, (r) => r.vehicle_type),
+            rank,
+            count: deepBase.length,
+        };
+    }, [deepBase]);
 
     // ── Slice B: Safety Forecast for the viewed week (from ALL records) ──
     // Precomputed model rows keyed by week-start, plus a client-side summary of
@@ -319,13 +501,13 @@ export default function Dashboard({ records, current_year: currentYear, years, s
             {/* Filter bar — click to cross-filter the whole dashboard */}
             <div className="panel mb-5 flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
                 <div className="flex items-center gap-2">
-                    <span className="label-mono">Environment</span>
+                    <span className="label-mono">Type</span>
                     <Seg active={env === 'all'} onClick={() => setEnv('all')}>All {bar.total}</Seg>
                     <Seg active={env === 'ground'} onClick={() => setEnv('ground')}>Ground {bar.ground}</Seg>
                     <Seg active={env === 'flight'} onClick={() => setEnv('flight')}>Flight {bar.flight}</Seg>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="label-mono">Type</span>
+                    <span className="label-mono">Mishap</span>
                     <Seg active={type === 'all'} onClick={() => setType('all')}>All {bar.total}</Seg>
                     <Seg active={type === 'accident'} onClick={() => setType('accident')}>Accidents {bar.accident}</Seg>
                     <Seg active={type === 'incident'} onClick={() => setType('incident')}>Incidents {bar.incident}</Seg>
@@ -342,7 +524,7 @@ export default function Dashboard({ records, current_year: currentYear, years, s
             {/* KPI tiles */}
             <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
                 <Kpi label="Mishaps (filtered)" value={m.total} sub={`of ${records.length} all-time`} />
-                <Kpi label={`This Year (${currentYear})`} value={m.ytd} accent />
+                <Kpi label={`This Year (${currentYear})`} value={m.ytd} sub={`${m.ytdFlight} flight · ${m.ytdGround} ground`} accent />
                 <Kpi label="Accidents (filtered)" value={m.accidents} sub={`${m.incidents} incidents · ${m.events} events`} />
                 <Kpi label="Top Location" value={m.topLocation} />
                 <Kpi label="Yearly Average" value={m.avgPerYear} sub={`peak ${m.peakYear ?? '—'} (${m.peakCount})`} />
@@ -370,13 +552,29 @@ export default function Dashboard({ records, current_year: currentYear, years, s
                     const band = riskForecast ? (RISK_BAND[riskForecast.risk_level] ?? RISK_BAND.moderate) : null;
                     return (
                         <>
-                        <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+                        <div className="grid items-start gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
                             {band ? (
                                 <div className={`rounded-lg p-4 text-center ring-1 ring-inset ${band.tile}`}>
-                                    <p className="label-mono !text-[0.6rem]">Risk this week</p>
-                                    <p className={`font-display mt-1 text-3xl font-bold ${band.text}`}>{band.dot} {band.label}</p>
-                                    {riskForecast.likelihood != null && (
-                                        <p className="mt-1 text-xs text-slate-500">~{riskForecast.likelihood}% likelihood</p>
+                                    <p className="label-mono !text-[0.6rem]">
+                                        {riskForecast.risk_level === 'baseline' ? 'Weekly base rate' : 'Risk this week'}
+                                    </p>
+                                    {riskForecast.risk_level === 'baseline' ? (
+                                        <>
+                                            <p className={`font-display mt-1 text-4xl font-bold ${band.text}`}>
+                                                {riskForecast.likelihood}%
+                                            </p>
+                                            <p className="mt-1 text-xs text-slate-500">of weeks have a flight mishap</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className={`font-display mt-1 text-3xl font-bold ${band.text}`}>{band.dot} {band.label}</p>
+                                            {riskForecast.likelihood != null && (
+                                                <p className="mt-1 text-xs text-slate-500">
+                                                    ~{riskForecast.likelihood}% this week
+                                                    {riskForecast.baseline != null && ` · normal ~${riskForecast.baseline}%`}
+                                                </p>
+                                            )}
+                                        </>
                                     )}
                                     <p className="mt-1 text-xs text-slate-500">
                                         {weekInfo.week.length} mishap{weekInfo.week.length === 1 ? '' : 's'} in {weekInfo.label} over {years.length} yrs
@@ -399,7 +597,7 @@ export default function Dashboard({ records, current_year: currentYear, years, s
                                     </div>
                                 </div>
                             )}
-                            <div>
+                            <div className="min-w-0">
                                 {band ? (
                                     <>
                                         {riskForecast.headline && (
@@ -407,7 +605,7 @@ export default function Dashboard({ records, current_year: currentYear, years, s
                                         )}
                                         {riskForecast.reasons?.length > 0 && (
                                             <div className="mb-3">
-                                                <p className="label-mono mb-1.5 !text-[0.6rem]">What's raising the risk this week</p>
+                                                <p className="label-mono mb-1.5 !text-[0.6rem]">Conditions to brief this week</p>
                                                 <div className="divide-y divide-slate-100">
                                                     {riskForecast.reasons.map((r, i) => <FactorBar key={i} {...r} />)}
                                                 </div>
@@ -444,6 +642,8 @@ export default function Dashboard({ records, current_year: currentYear, years, s
                     );
                 })()}
             </Panel>
+
+            <SpiPanel spi={spi} />
 
             {/* Key Findings */}
             {findings.length > 0 && (
@@ -516,6 +716,50 @@ export default function Dashboard({ records, current_year: currentYear, years, s
                     </div>
                 </Panel>
             </div>
+
+            {/* Deeper taxonomy analysis — fleet, phase, vehicle, rank */}
+            <div className="panel mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+                <span className="label-mono">Analysis scope</span>
+                <Seg active={analysisScope === 'all'} onClick={() => setAnalysisScope('all')}>All-time</Seg>
+                <Seg
+                    active={analysisScope === 'month'}
+                    onClick={() => {
+                        setAnalysisScope('month');
+                        if (!analysisMonth && monthsAvail[0]) setAnalysisMonth(`${monthsAvail[0].year}-${monthsAvail[0].month}`);
+                    }}
+                >
+                    Monthly
+                </Seg>
+                {analysisScope === 'month' && (
+                    <select
+                        className="field !w-auto !py-1 !text-xs"
+                        value={analysisMonth}
+                        onChange={(e) => setAnalysisMonth(e.target.value)}
+                    >
+                        {monthsAvail.map((mo) => (
+                            <option key={`${mo.year}-${mo.month}`} value={`${mo.year}-${mo.month}`}>
+                                {MONTHS[mo.month - 1]} {mo.year}
+                            </option>
+                        ))}
+                    </select>
+                )}
+                <span className="label-mono ml-auto !text-navy-700">{deep.count} record{deep.count === 1 ? '' : 's'} in scope</span>
+            </div>
+
+            {deep.count === 0 ? (
+                <Panel className="mb-5">
+                    <p className="py-6 text-center text-sm text-slate-500">No records in this month for the current filter.</p>
+                </Panel>
+            ) : (
+                <div className="mb-5 grid gap-5 lg:grid-cols-2">
+                    <BreakdownPanel title="By Aircraft — Flight" items={deep.aircraft} unit="flight mishaps" />
+                    <BreakdownPanel title="By Phase of Flight" items={deep.phase} unit="flight mishaps" />
+                    <BreakdownPanel title="By Vehicle Type — Ground" items={deep.vehicle} unit="ground mishaps" />
+                    <BreakdownPanel title="Personnel Rank Involved" items={deep.rank} unit="records" />
+                </div>
+            )}
+
+            <CapsPanel caps={caps} />
 
             {/* Slice C — year breakdown matrix */}
             <Panel title={`Breakdown of Mishaps — CY ${span}`}>
