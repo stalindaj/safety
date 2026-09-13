@@ -178,6 +178,13 @@ SESSION_SECURE_COOKIE=true
 Doing this before the certificate exists locks you out — the secure cookie is
 never sent over plain HTTP, so login silently fails.
 
+### 2.9b Outbound access for live weather
+
+The dashboard's Early Warning panel reads live airfield weather from
+`https://aviationweather.gov` (NOAA, public, no key). The host must allow
+outbound HTTPS. If it doesn't, the panel shows "couldn't be reached" and the
+rest of the dashboard works normally.
+
 ### 2.10 PHP limits and photo storage
 
 CAPS takes up to 3 proof photos per corrective action. The browser shrinks

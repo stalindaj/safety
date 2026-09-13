@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\CorrectiveActionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExternalOccurrenceController;
 use App\Http\Controllers\MishapController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SetupController;
@@ -32,6 +33,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/corrective-actions/{correctiveAction}', [CorrectiveActionController::class, 'update'])->name('corrective-actions.update');
     Route::delete('/corrective-actions/{correctiveAction}', [CorrectiveActionController::class, 'destroy'])->name('corrective-actions.destroy');
     Route::get('/cap-proofs/{proof}', [CorrectiveActionController::class, 'photo'])->name('cap-proofs.show');
+
+    // Early warning — occurrences outside the Wing, logged as advisories.
+    Route::post('/external-occurrences', [ExternalOccurrenceController::class, 'store'])->name('external-occurrences.store');
+    Route::put('/external-occurrences/{externalOccurrence}', [ExternalOccurrenceController::class, 'update'])->name('external-occurrences.update');
+    Route::delete('/external-occurrences/{externalOccurrence}', [ExternalOccurrenceController::class, 'destroy'])->name('external-occurrences.destroy');
 
     // Account — change your own password.
     Route::get('/account', [ProfileController::class, 'edit'])->name('account.edit');

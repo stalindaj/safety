@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CorrectiveAction;
 use App\Models\Mishap;
 use App\Models\SafetyForecast;
+use App\Support\EarlyWarning;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -162,6 +163,8 @@ class DashboardController extends Controller
             'today' => now()->format('Y-m-d'),
             'risk_forecasts' => $forecasts,
             'spi' => $this->spi($all),
+            // Signals that can come before a mishap (weather, season, outside occurrences).
+            'early_warning' => EarlyWarning::build(),
             // CAPS follow-through: every mishap with its corrective actions, so the
             // dashboard can show a year's mishaps and roll the same actions up by
             // the unit (OPR/UPR) that owns them.

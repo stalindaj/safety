@@ -17,6 +17,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Badge, Modal, Panel } from '@/Components/Ui';
 import { AlertIcon, CheckIcon } from '@/Components/Icons';
 import PhilippinesMap from '@/Components/PhilippinesMap';
+import EarlyWarningPanel from '@/Components/EarlyWarningPanel';
 
 // Chart colours are theme variables, so they follow light / dark mode.
 const NAVY = 'var(--color-navy-600)';
@@ -407,7 +408,7 @@ function CapsOverview({ mishaps, currentYear }) {
 }
 
 /* ── main ─────────────────────────────────────────────────────────────── */
-export default function Dashboard({ records, current_year: currentYear, years, span, today, risk_forecasts: riskForecasts = [], caps = [], spi = null }) {
+export default function Dashboard({ records, current_year: currentYear, years, span, today, risk_forecasts: riskForecasts = [], caps = [], spi = null, early_warning: earlyWarning = null }) {
     const [type, setType] = useState('all'); // all | accident | incident
     const [env, setEnv] = useState('all'); // all | ground | flight
     const [monthlyYear, setMonthlyYear] = useState(currentYear);
@@ -762,6 +763,7 @@ export default function Dashboard({ records, current_year: currentYear, years, s
             </Panel>
 
             <SpiPanel spi={spi} />
+            <EarlyWarningPanel data={earlyWarning} />
 
             {/* Key Findings */}
             {findings.length > 0 && (

@@ -118,6 +118,39 @@ recommendations = CAPS rows → staff act on them → proof → Complied.
 - Local dev: `AppServiceProvider` passes TEMP/TMP through `php artisan serve`
   (Windows strips them, which silently broke uploads and large POSTs).
 
+## Predictive Safety Forecast panel (under the SPI) — DONE (2026-09-14)
+Titled "Predictive Safety Forecast", badged **Experimental**, no intro text (the
+user found it hard to read). Leads with chance tiles from the Wing's own record,
+last 5 years: flight mishap this week (~10%), any mishap this week (~17%),
+bird / wildlife strike this week (seasonal when in a migration window). A
+"flight mishap in the next 30 days" tile (~31%) was removed — it read as alarming
+for reporting and repeated the weekly figure. Note for reporting: 28 of the last
+30 flight mishaps were incidents; the flight-accident chance is ~0.8% a week.
+Season rows show "X% a week · usual Y%" with a
+verdict: higher / lower / same as usual (gap < 2 pts), or "too few to tell"
+(< 5 events). Season badges follow the verdict (Brief only when higher).
+Originally built as "Early Warning"; details below still apply.
+
+## Early Warning panel (under the SPI) — DONE (2026-09-14)
+The SPI is lagging (moves only after a 15SW mishap). The Early Warning panel adds
+leading signals, Mindanao first. **Advisories only — never counted in the SPI
+or base rate.** Levels: Brief crews / Be aware / No hazards / For information.
+- **Live airfield weather** (`app/Support/AirfieldWeather.php`): METAR (now) +
+  TAF (~24 h) from NOAA's aviationweather.gov public API for RPMZ Zamboanga,
+  RPMR General Santos, RPMD Davao, RPVM Mactan-Cebu, RPLL Manila; cached 30 min
+  (15 min after a failure). Brief = thunderstorm/lightning, gusts ≥ 25 kt,
+  visibility < ~5 km; Be aware = CB cloud, haze, rain, wind ≥ 20 kt. Routine
+  "TEMPO … CB" in forecasts is only "Be aware" (it's in most tropical TAFs).
+  Lumbia/CDO (TOG 10, LAB) have no report in this feed — the panel says so.
+- **Season** (`app/Support/EarlyWarning.php`): bird-migration windows with the
+  Wing's own bird-strike counts (11 of 23 in Feb–May, 7 in Sep–Nov), monsoon
+  phase, and El Niño from the weekly notebook row.
+- **Outside occurrences** (`external_occurrences` table, logged by staff from the
+  panel): auto-flagged "Our aircraft type" / "Mindanao" / "One of our top
+  causes"; 2+ matches = Brief crews. Shown for 30 days by default.
+- Needs outbound HTTPS from the host to aviationweather.gov; if blocked, the
+  panel shows "couldn't be reached — not an all-clear".
+
 ## NOT done yet / next steps
 1. **Go live on cPanel** — prepared but not executed. Plan uses subdomain/folder/
    DB all named **`safety`**. Steps: GitHub token → MySQL DB (`youruser_safety`)
