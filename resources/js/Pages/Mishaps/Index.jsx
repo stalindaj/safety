@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Badge, Button, EmptyState, Field, Modal, PageHeader, Panel, Table } from '@/Components/Ui';
 
@@ -206,9 +206,22 @@ function Pagination({ links }) {
     );
 }
 
-export default function MishapsIndex({ mishaps, filters, years, options }) {
+export default function MishapsIndex({ mishaps, filters, focus = null, years, options }) {
     const [editing, setEditing] = useState(null); // null = closed, 'new' = create, object = edit
-    const [expanded, setExpanded] = useState(null);
+    const [expanded, setExpanded] = useState(focus);
+    const [flash, setFlash] = useState(null);
+
+    // Arrived from a link to one record (?focus=id): scroll to its row, open it, and highlight it briefly.
+    useEffect(() => {
+        if (!focus) return undefined;
+        const row = document.getElementById(`mishap-${focus}`);
+        if (!row) return undefined;
+        setExpanded(focus);
+        setFlash(focus);
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const t = setTimeout(() => setFlash(null), 4000);
+        return () => clearTimeout(t);
+    }, [focus]);
 
     const applyFilter = (patch) => {
         const next = { ...filters, ...patch };
@@ -326,7 +339,13 @@ export default function MishapsIndex({ mishaps, filters, years, options }) {
                                 const open = expanded === m.id;
                                 const statuses = Object.entries(m.caps_summary ?? {});
                                 return (
-                                    <tr key={m.id} className="align-top hover:bg-slate-50">
+                                    <tr
+                                        key={m.id}
+                                        id={`mishap-${m.id}`}
+                                        className={`scroll-mt-24 align-top transition-colors duration-700 ${
+                                            flash === m.id ? 'bg-gold-100 outline-2 -outline-offset-2 outline-gold-400' : focus === m.id ? 'bg-gold-50' : 'hover:bg-slate-50'
+                                        }`}
+                                    >
                                         <td className="px-3 py-2.5 font-mono text-xs whitespace-nowrap text-navy-800">
                                             {m.display_date}
                                         </td>

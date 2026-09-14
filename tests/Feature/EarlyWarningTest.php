@@ -59,14 +59,46 @@ class EarlyWarningTest extends TestCase
         $this->assertFalse($w['RPMD']['reporting']);
     }
 
-    public function test_the_dashboard_still_loads_when_the_weather_service_is_down(): void
+    public function test_the_forecast_page_still_loads_when_the_weather_service_is_down(): void
     {
         Http::fake(['aviationweather.gov/*' => Http::response('', 503)]);
         $this->actingAs(User::factory()->create());
 
+        $this->get('/forecast')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Forecast')
+            ->has('risk_forecasts')
+            ->has('spi')
+            ->where('early_warning.weather.available', false));
+    }
+
+    public function test_the_dashboard_is_analytics_only(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        // No forecast data, SPI or weather call on the dashboard any more.
         $this->get('/')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Dashboard')
-            ->where('early_warning.weather.available', false));
+            ->has('records')
+            ->missing('spi')
+            ->missing('early_warning')
+            ->missing('risk_forecasts'));
+    }
+
+    public function test_past_mishaps_on_the_forecast_page_carry_causes_and_lessons(): void
+    {
+        Http::fake(['aviationweather.gov/*' => Http::response('', 503)]);
+        $this->actingAs(User::factory()->create());
+        $m = Mishap::factory()->create(['lesson_learned' => 'Brief the bird hazard before every sortie.']);
+        $m->correctiveActions()->create([
+            'cause_factor' => 'Environmental (Primary)', 'latent_condition' => 'No bird control at the field.',
+            'corrective_action' => 'Set up a bird control program.',
+        ]);
+
+        $this->get('/forecast')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('records.0.id', $m->id)
+            ->where('records.0.lesson_learned', 'Brief the bird hazard before every sortie.')
+            ->where('records.0.causes.0.factor', 'Environmental (Primary)')
+            ->where('records.0.causes.0.detail', 'No bird control at the field.'));
     }
 
     public function test_an_outside_occurrence_matching_the_wing_is_flagged_to_brief(): void

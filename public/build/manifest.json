@@ -1,21 +1,28 @@
 {
-  "_AppLayout-zJiaPeZ4.js": {
-    "file": "assets/AppLayout-zJiaPeZ4.js",
+  "_AppLayout-Dm3DU8Cm.js": {
+    "file": "assets/AppLayout-Dm3DU8Cm.js",
     "name": "AppLayout",
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-DufHJ4_N.js"
+      "_Ui-Bev_noua.js"
     ]
   },
-  "_Ui-DufHJ4_N.js": {
-    "file": "assets/Ui-DufHJ4_N.js",
+  "_LineChart-d5m4u6FC.js": {
+    "file": "assets/LineChart-d5m4u6FC.js",
+    "name": "LineChart",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_Ui-Bev_noua.js": {
+    "file": "assets/Ui-Bev_noua.js",
     "name": "Ui",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DET9PZ6R.css",
+    "file": "assets/app-B7fw6DyK.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -24,76 +31,92 @@
     ]
   },
   "resources/js/Pages/Account/Edit.jsx": {
-    "file": "assets/Edit-oRrW0_Zv.js",
+    "file": "assets/Edit-BlMm3dXI.js",
     "name": "Edit",
     "src": "resources/js/Pages/Account/Edit.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-zJiaPeZ4.js",
-      "_Ui-DufHJ4_N.js"
+      "_AppLayout-Dm3DU8Cm.js",
+      "_Ui-Bev_noua.js"
     ],
     "css": [
-      "assets/app-DET9PZ6R.css"
+      "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Auth/Login.jsx": {
-    "file": "assets/Login-BEerxtGC.js",
+    "file": "assets/Login-DAeUKm7Z.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-DufHJ4_N.js"
+      "_Ui-Bev_noua.js"
     ],
     "css": [
-      "assets/app-DET9PZ6R.css"
+      "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-2vBgDAXF.js",
+    "file": "assets/Dashboard-IQoAxVPZ.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Dashboard.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-zJiaPeZ4.js",
-      "_Ui-DufHJ4_N.js"
+      "_AppLayout-Dm3DU8Cm.js",
+      "_Ui-Bev_noua.js",
+      "_LineChart-d5m4u6FC.js"
     ],
     "css": [
-      "assets/app-DET9PZ6R.css"
+      "assets/app-B7fw6DyK.css"
+    ]
+  },
+  "resources/js/Pages/Forecast.jsx": {
+    "file": "assets/Forecast-6_iG3YmN.js",
+    "name": "Forecast",
+    "src": "resources/js/Pages/Forecast.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-Dm3DU8Cm.js",
+      "_Ui-Bev_noua.js",
+      "_LineChart-d5m4u6FC.js"
+    ],
+    "css": [
+      "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Mishaps/Index.jsx": {
-    "file": "assets/Index-cmYTwsMo.js",
+    "file": "assets/Index-CnimjbYF.js",
     "name": "Index",
     "src": "resources/js/Pages/Mishaps/Index.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-zJiaPeZ4.js",
-      "_Ui-DufHJ4_N.js"
+      "_AppLayout-Dm3DU8Cm.js",
+      "_Ui-Bev_noua.js"
     ],
     "css": [
-      "assets/app-DET9PZ6R.css"
+      "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Mishaps/Plan.jsx": {
-    "file": "assets/Plan-DelAAD4l.js",
+    "file": "assets/Plan-npmQPU6E.js",
     "name": "Plan",
     "src": "resources/js/Pages/Mishaps/Plan.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-zJiaPeZ4.js",
-      "_Ui-DufHJ4_N.js"
+      "_AppLayout-Dm3DU8Cm.js",
+      "_Ui-Bev_noua.js"
     ],
     "css": [
-      "assets/app-DET9PZ6R.css"
+      "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-DOj-dRWu.js",
+    "file": "assets/app-B2hW_5Ch.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
@@ -101,11 +124,12 @@
       "resources/js/Pages/Account/Edit.jsx",
       "resources/js/Pages/Auth/Login.jsx",
       "resources/js/Pages/Dashboard.jsx",
+      "resources/js/Pages/Forecast.jsx",
       "resources/js/Pages/Mishaps/Index.jsx",
       "resources/js/Pages/Mishaps/Plan.jsx"
     ],
     "css": [
-      "assets/app-DET9PZ6R.css"
+      "assets/app-B7fw6DyK.css"
     ]
   }
 }

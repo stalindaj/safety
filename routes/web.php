@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\CorrectiveActionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExternalOccurrenceController;
+use App\Http\Controllers\ForecastController;
 use App\Http\Controllers\MishapController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SetupController;
@@ -20,6 +21,9 @@ Route::post('/logout', [SessionController::class, 'destroy'])
 
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+
+    // Safety Forecast — weekly base rate (notebook) + Predictive Safety Forecast.
+    Route::get('/forecast', ForecastController::class)->name('forecast');
 
     // Mishap Records — intake, edit, and removal.
     Route::get('/mishaps', [MishapController::class, 'index'])->name('mishaps.index');

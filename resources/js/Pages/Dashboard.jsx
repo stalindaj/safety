@@ -7,7 +7,6 @@ import {
     Legend,
     Line,
     LineChart,
-    ReferenceLine,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -17,19 +16,12 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Badge, Modal, Panel } from '@/Components/Ui';
 import { AlertIcon, CheckIcon } from '@/Components/Icons';
 import PhilippinesMap from '@/Components/PhilippinesMap';
-import EarlyWarningPanel from '@/Components/EarlyWarningPanel';
 
 // Chart colours are theme variables, so they follow light / dark mode.
 const NAVY = 'var(--color-navy-600)';
 const GOLD = 'var(--color-gold-500)';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
-const dayIdx = (m, d) => Math.floor(Date.UTC(2001, m - 1, d) / 86400000); // day-of-year, year-agnostic
-const mondayOf = (dateStr) => {
-    const d = new Date(dateStr + 'T00:00:00');
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // back up to Monday
-    return d.toISOString().slice(0, 10);
-};
 const axis = { fontSize: 11, fontFamily: 'IBM Plex Mono, monospace', fill: 'var(--color-slate-500)' };
 const tip = {
     borderRadius: 8, border: '1px solid var(--color-slate-200)', fontSize: 12,
@@ -93,33 +85,9 @@ function Finding({ text, tone }) {
     );
 }
 
-// A single contributing-factor bar for the forecast (width = relative impact).
-const FBAR_FILL = { alert: 'bg-rose-500', info: 'bg-navy-600', good: 'bg-emerald-500' };
-function FactorBar({ text, impact, tone }) {
-    if (!impact) return <p className="py-1.5 text-sm text-emerald-700">{text}</p>;
-    return (
-        <div className="flex items-center gap-3 py-1.5">
-            <span className="w-56 shrink-0 text-sm text-navy-900">{text}</span>
-            <div className="h-2.5 flex-1 overflow-hidden rounded bg-slate-100">
-                <div className={`h-full rounded ${FBAR_FILL[tone] ?? FBAR_FILL.info}`} style={{ width: `${Math.max(impact, 6)}%` }} />
-            </div>
-        </div>
-    );
-}
-
 const TYPE_TONE = { accident: 'red', incident: 'amber', event: 'neutral' };
 const ENV_TONE = { flight: 'sky', ground: 'navy' };
 
-// Plain-language risk bands for the weekly forecast (worst → best).
-const RISK_BAND = {
-    // Default: the honest historical rate. Week-to-week prediction was retired
-    // after walk-forward validation showed no feature set beat the base rate.
-    baseline: { label: 'Base rate', dot: '', tile: 'bg-navy-50 ring-navy-100', text: 'text-navy-800' },
-    high: { label: 'High', dot: '🔴', tile: 'bg-rose-50 ring-rose-100', text: 'text-rose-700' },
-    elevated: { label: 'Elevated', dot: '🟠', tile: 'bg-orange-50 ring-orange-100', text: 'text-orange-700' },
-    moderate: { label: 'Moderate', dot: '🟡', tile: 'bg-amber-50 ring-amber-100', text: 'text-amber-700' },
-    low: { label: 'Low', dot: '🟢', tile: 'bg-emerald-50 ring-emerald-100', text: 'text-emerald-700' },
-};
 function LocationDetail({ items }) {
     const n = items.length;
     const accidents = items.filter((i) => i.type === 'accident').length;
@@ -158,86 +126,6 @@ function LocationDetail({ items }) {
     );
 }
 
-/* Safety Performance Indicator — ICAO Doc 9859 §4.4.5 style trigger levels.
-   Detects an abnormal rate; it does not predict individual events. */
-const SPI_STATUS = {
-    normal: { label: 'Normal', tile: 'bg-emerald-50 ring-emerald-100', text: 'text-emerald-700' },
-    caution: { label: 'Caution', tile: 'bg-amber-50 ring-amber-100', text: 'text-amber-700' },
-    alert: { label: 'Alert', tile: 'bg-orange-50 ring-orange-100', text: 'text-orange-700' },
-    critical: { label: 'Critical', tile: 'bg-rose-50 ring-rose-100', text: 'text-rose-700' },
-};
-function SpiPanel({ spi }) {
-    if (!spi || !spi.series?.length) return null;
-    const st = SPI_STATUS[spi.status] ?? SPI_STATUS.normal;
-    const L = spi.levels;
-    return (
-        <Panel title={`Safety Performance Indicator — rolling ${spi.window_days}-day mishap count`} className="mb-5">
-            <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
-                <div className={`self-start rounded-lg p-4 text-center ring-1 ring-inset ${st.tile}`}>
-                    <p className="label-mono !text-[0.6rem]">Current status</p>
-                    <p className={`font-display mt-1 text-3xl font-bold ${st.text}`}>{st.label}</p>
-                    <p className="mt-1 text-xs text-slate-600">
-                        {spi.current} mishap{spi.current === 1 ? '' : 's'} in the last {spi.window_days} days
-                    </p>
-                    <div className="mt-3 space-y-0.5 border-t border-white/60 pt-2 text-left font-mono text-[0.65rem] text-slate-600">
-                        <p>normal (mean) · {L.mean}</p>
-                        <p>caution +1σ · {L.caution}</p>
-                        <p className="text-orange-700">alert +2σ · {L.alert}</p>
-                        <p className="text-rose-700">critical +3σ · {L.critical}</p>
-                    </div>
-                </div>
-
-                <div className="min-w-0">
-                    <p className="mb-2 text-sm text-slate-600">
-                        Trigger levels are the historical mean ({spi.mean}) plus multiples of the standard
-                        deviation ({spi.sd}) — the method ICAO prescribes for safety triggers.
-                    </p>
-                    <div className="h-52">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={spi.series} margin={{ top: 8, right: 16, bottom: 4, left: -20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-slate-200)" vertical={false} />
-                                <XAxis
-                                    dataKey="date"
-                                    tick={axis}
-                                    tickLine={false}
-                                    axisLine={{ stroke: 'var(--color-slate-200)' }}
-                                    interval={Math.ceil(spi.series.length / 8)}
-                                    tickFormatter={(d) => String(d).slice(0, 7)}
-                                />
-                                <YAxis tick={axis} tickLine={false} axisLine={false} allowDecimals={false} width={28} />
-                                <Tooltip contentStyle={tip} formatter={(v) => [`${v} mishaps`, `${spi.window_days}-day count`]} />
-                                <ReferenceLine y={L.mean} stroke="var(--color-slate-400)" strokeDasharray="4 4" />
-                                <ReferenceLine y={L.alert} stroke="#ea7317" strokeDasharray="6 3" />
-                                <ReferenceLine y={L.critical} stroke="#e11d48" strokeDasharray="6 3" />
-                                <Line type="monotone" dataKey="value" stroke={NAVY} strokeWidth={2} dot={false} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
-
-            {spi.breaches?.length > 0 && (
-                <div className="mt-4 border-t border-slate-100 pt-3">
-                    <p className="label-mono mb-2 !text-[0.6rem]">Periods that breached the alert level</p>
-                    <ul className="flex flex-wrap gap-2">
-                        {spi.breaches.map((b, i) => (
-                            <li key={i} className="rounded-md bg-orange-50 px-2.5 py-1 text-xs text-orange-900 ring-1 ring-orange-200 ring-inset">
-                                {b.from} → {b.to} · peak {b.peak}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            <p className="label-mono mt-3 !text-[0.55rem] !text-slate-400">
-                Method: ICAO Doc 9859 (SMM 4th ed) §4.4.5 — trigger levels from the population standard
-                deviation of preceding data points. Detects abnormal rates; does not predict individual events.
-            </p>
-        </Panel>
-    );
-}
-
-/* A titled list of proportional bars with an auto-generated insight line. */
 function BreakdownPanel({ title, items, unit = 'of the view' }) {
     if (!items.length) return null;
     const max = Math.max(...items.map((i) => i.count));
@@ -342,15 +230,20 @@ function CapsOverview({ mishaps, currentYear }) {
                             const t = tallyCaps(m.actions);
                             return (
                                 <li key={m.id} className="grid gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_13rem]">
-                                    <div className="min-w-0">
+                                    <Link
+                                        href={`/mishaps?year=${m.year}&focus=${m.id}`}
+                                        title="Open this record in Mishap Records"
+                                        className="group -mx-2 -my-1 block min-w-0 rounded-md px-2 py-1 transition hover:bg-slate-50"
+                                    >
                                         <div className="flex flex-wrap items-center gap-2">
                                             <span className="font-mono text-xs text-navy-800">{m.display_date}</span>
-                                            <span className="text-sm font-medium text-navy-900">{m.location ?? '—'}</span>
+                                            <span className="text-sm font-medium text-navy-900 group-hover:underline">{m.location ?? '—'}</span>
                                             <Badge tone={TYPE_TONE[m.type]}>{m.type}</Badge>
                                             <Badge tone={ENV_TONE[m.environment]}>{m.environment}</Badge>
+                                            <span className="label-mono ml-auto !text-navy-500 opacity-0 transition group-hover:opacity-100">View record →</span>
                                         </div>
-                                        <p className="mt-1 line-clamp-2 text-xs text-slate-600" title={m.description}>{m.description}</p>
-                                    </div>
+                                        <p className="mt-1 line-clamp-2 text-xs text-slate-600 group-hover:text-navy-900">{m.description}</p>
+                                    </Link>
                                     <div>
                                         {t.total === 0 ? (
                                             <>
@@ -408,13 +301,12 @@ function CapsOverview({ mishaps, currentYear }) {
 }
 
 /* ── main ─────────────────────────────────────────────────────────────── */
-export default function Dashboard({ records, current_year: currentYear, years, span, today, risk_forecasts: riskForecasts = [], caps = [], spi = null, early_warning: earlyWarning = null }) {
+export default function Dashboard({ records, current_year: currentYear, years, span, caps = [] }) {
     const [type, setType] = useState('all'); // all | accident | incident
     const [env, setEnv] = useState('all'); // all | ground | flight
     const [monthlyYear, setMonthlyYear] = useState(currentYear);
     const [mapYear, setMapYear] = useState('all');
     const [loc, setLoc] = useState(null);
-    const [weekIdx, setWeekIdx] = useState(-1); // -1 = default to the week containing today
     const [analysisScope, setAnalysisScope] = useState('all'); // all | month
     const [analysisMonth, setAnalysisMonth] = useState(''); // 'YYYY-M'
 
@@ -524,45 +416,6 @@ export default function Dashboard({ records, current_year: currentYear, years, s
         };
     }, [deepBase]);
 
-    // ── Slice B: Safety Forecast for the viewed week (from ALL records) ──
-    // Precomputed model rows keyed by week-start, plus a client-side summary of
-    // the mishaps that historically fall in that calendar week.
-    const forecastMap = useMemo(
-        () => Object.fromEntries(riskForecasts.map((f) => [f.week_start, f])),
-        [riskForecasts],
-    );
-    // Navigate among the weeks the model actually produced, so the viewed week
-    // always has a forecast (and its factor bars) rather than falling back.
-    const weeks = useMemo(() => riskForecasts.map((f) => f.week_start).sort(), [riskForecasts]);
-    const defaultIdx = useMemo(() => {
-        if (!weeks.length) return 0;
-        const after = weeks.findIndex((w) => w > today);
-        return after === -1 ? weeks.length - 1 : Math.max(0, after - 1);
-    }, [weeks, today]);
-    const idx = weekIdx < 0 ? defaultIdx : Math.min(Math.max(weekIdx, 0), Math.max(weeks.length - 1, 0));
-    const weekStart = weeks.length ? weeks[idx] : mondayOf(today);
-    const riskForecast = forecastMap[weekStart] ?? null;
-
-    const weekInfo = useMemo(() => {
-        const t = new Date(weekStart + 'T00:00:00');
-        const start = dayIdx(t.getMonth() + 1, t.getDate());
-        const inWeek = (r) => (((dayIdx(r.month, r.day) - start) % 365) + 365) % 365 <= 6;
-        const week = records.filter(inWeek).sort((a, b) => (a.month - b.month) || (a.day - b.day));
-        const distinctYears = new Set(week.map((r) => r.year)).size;
-        const end = new Date(t.getTime() + 6 * 86400000);
-        const fmt = (d) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
-        return {
-            week,
-            flight: week.filter((r) => r.environment === 'flight').length,
-            ground: week.filter((r) => r.environment === 'ground').length,
-            likelihood: years.length ? Math.round((distinctYears / years.length) * 100) : 0,
-            distinctYears,
-            label: `${fmt(t)} – ${fmt(end)}`,
-        };
-    }, [records, weekStart, years]);
-
-    const shiftIdx = (delta) => setWeekIdx(Math.min(Math.max(idx + delta, 0), weeks.length - 1));
-
     // ── Slice C: year breakdown matrix (from ALL records) ──
     const breakdown = useMemo(() => {
         const rows = years.map((y) => {
@@ -649,121 +502,6 @@ export default function Dashboard({ records, current_year: currentYear, years, s
                 <Kpi label="Yearly Average" value={m.avgPerYear} sub={`peak ${m.peakYear ?? '—'} (${m.peakCount})`} />
             </div>
 
-            {/* Slice B — Safety Forecast (week-changer + risk-across-year chart) */}
-            <Panel
-                title="Safety Forecast"
-                className="mb-5"
-                action={
-                    <div className="flex items-center gap-1.5">
-                        <button type="button" onClick={() => shiftIdx(-1)} disabled={idx <= 0} title="Previous week"
-                            className="rounded-md px-2 py-1 font-mono text-xs text-navy-700 ring-1 ring-slate-300 ring-inset hover:bg-slate-50 disabled:opacity-30">◀</button>
-                        <span className="label-mono !text-navy-800 min-w-32 text-center">{weekInfo.label}</span>
-                        <button type="button" onClick={() => shiftIdx(1)} disabled={idx >= weeks.length - 1} title="Next week"
-                            className="rounded-md px-2 py-1 font-mono text-xs text-navy-700 ring-1 ring-slate-300 ring-inset hover:bg-slate-50 disabled:opacity-30">▶</button>
-                        {idx !== defaultIdx && (
-                            <button type="button" onClick={() => setWeekIdx(-1)}
-                                className="label-mono !text-gold-700 hover:!text-gold-800 ml-1">This week</button>
-                        )}
-                    </div>
-                }
-            >
-                {(() => {
-                    const band = riskForecast ? (RISK_BAND[riskForecast.risk_level] ?? RISK_BAND.moderate) : null;
-                    return (
-                        <>
-                        <div className="grid items-start gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
-                            {band ? (
-                                <div className={`rounded-lg p-4 text-center ring-1 ring-inset ${band.tile}`}>
-                                    <p className="label-mono !text-[0.6rem]">
-                                        {riskForecast.risk_level === 'baseline' ? 'Weekly base rate' : 'Risk this week'}
-                                    </p>
-                                    {riskForecast.risk_level === 'baseline' ? (
-                                        <>
-                                            <p className={`font-display mt-1 text-4xl font-bold ${band.text}`}>
-                                                {riskForecast.likelihood}%
-                                            </p>
-                                            <p className="mt-1 text-xs text-slate-500">of weeks have a flight mishap</p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <p className={`font-display mt-1 text-3xl font-bold ${band.text}`}>{band.dot} {band.label}</p>
-                                            {riskForecast.likelihood != null && (
-                                                <p className="mt-1 text-xs text-slate-500">
-                                                    ~{riskForecast.likelihood}% this week
-                                                    {riskForecast.baseline != null && ` · normal ~${riskForecast.baseline}%`}
-                                                </p>
-                                            )}
-                                        </>
-                                    )}
-                                    <p className="mt-1 text-xs text-slate-500">
-                                        {weekInfo.week.length} mishap{weekInfo.week.length === 1 ? '' : 's'} in {weekInfo.label} over {years.length} yrs
-                                    </p>
-                                    <div className="mt-3 flex justify-center gap-2">
-                                        <Badge tone="sky">{weekInfo.flight} Flight</Badge>
-                                        <Badge tone="navy">{weekInfo.ground} Ground</Badge>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="rounded-lg bg-navy-50 p-4 text-center ring-1 ring-navy-100 ring-inset">
-                                    <p className="label-mono !text-[0.6rem]">Likelihood this week</p>
-                                    <p className="font-display mt-1 text-5xl font-bold text-navy-800">{weekInfo.likelihood}%</p>
-                                    <p className="mt-1 text-xs text-slate-500">
-                                        {weekInfo.week.length} mishap{weekInfo.week.length === 1 ? '' : 's'} in {weekInfo.label} over {years.length} yrs
-                                    </p>
-                                    <div className="mt-3 flex justify-center gap-2">
-                                        <Badge tone="sky">{weekInfo.flight} Flight</Badge>
-                                        <Badge tone="navy">{weekInfo.ground} Ground</Badge>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="min-w-0">
-                                {band ? (
-                                    <>
-                                        {riskForecast.headline && (
-                                            <p className="mb-3 text-sm font-medium text-navy-900">{riskForecast.headline}</p>
-                                        )}
-                                        {riskForecast.reasons?.length > 0 && (
-                                            <div className="mb-3">
-                                                <p className="label-mono mb-1.5 !text-[0.6rem]">Conditions to brief this week</p>
-                                                <div className="divide-y divide-slate-100">
-                                                    {riskForecast.reasons.map((r, i) => <FactorBar key={i} {...r} />)}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <p className="mb-2 text-sm text-slate-600">
-                                        {weekInfo.week.length === 0
-                                            ? `No mishaps historically recorded in ${weekInfo.label} — a low-risk week.`
-                                            : `Assessment: this calendar week (${weekInfo.label}) has seen ${weekInfo.week.length} mishap${weekInfo.week.length === 1 ? '' : 's'} across the last ${years.length} years — occurring in ${weekInfo.distinctYears} of them. Brief crews accordingly.`}
-                                    </p>
-                                )}
-                                {weekInfo.week.length > 0 && (
-                                    <ul className="max-h-56 divide-y divide-slate-100 overflow-y-auto">
-                                        {weekInfo.week.map((r, i) => (
-                                            <li key={i} className="flex flex-wrap items-center gap-2 py-1.5">
-                                                <span className="font-mono text-xs text-navy-800">{r.display_date}</span>
-                                                <Badge tone={TYPE_TONE[r.type]}>{r.type}</Badge>
-                                                <Badge tone={ENV_TONE[r.environment]}>{r.environment}</Badge>
-                                                <span className="min-w-0 flex-1 truncate text-xs text-slate-600" title={r.description}>{r.location ?? '—'} — {r.description}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                                {band && (
-                                    <p className="label-mono mt-3 !text-[0.55rem] !text-slate-400">
-                                        Source: {riskForecast.source}{riskForecast.generated_at ? ` · updated ${riskForecast.generated_at}` : ''}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                        </>
-                    );
-                })()}
-            </Panel>
-
-            <SpiPanel spi={spi} />
-            <EarlyWarningPanel data={earlyWarning} />
 
             {/* Key Findings */}
             {findings.length > 0 && (

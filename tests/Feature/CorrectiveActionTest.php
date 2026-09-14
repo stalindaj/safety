@@ -66,6 +66,43 @@ class CorrectiveActionTest extends TestCase
         Storage::disk('local')->assertExists($action->proofs()->sole()->path);
     }
 
+    public function test_a_pdf_counts_as_proof_and_opens_in_the_browser(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $mishap = Mishap::factory()->create();
+
+        $this->post("/mishaps/{$mishap->id}/plan", $this->payload([
+            'status' => 'complied',
+            'photos' => [UploadedFile::fake()->create('signed-memo.pdf', 300, 'application/pdf')],
+        ]))->assertSessionHasNoErrors();
+
+        $proof = CorrectiveAction::sole()->proofs()->sole();
+        $this->assertTrue($proof->isPdf());
+
+        $this->get("/mishaps/{$mishap->id}/plan")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('entries.0.proofs.0.kind', 'pdf')
+            ->where('entries.0.proofs.0.name', 'signed-memo.pdf'));
+
+        $this->get("/cap-proofs/{$proof->id}")->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+    }
+
+    public function test_other_file_types_and_big_files_are_rejected(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $mishap = Mishap::factory()->create();
+
+        $this->post("/mishaps/{$mishap->id}/plan", $this->payload([
+            'photos' => [
+                UploadedFile::fake()->create('notes.docx', 50, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+                UploadedFile::fake()->create('scan.pdf', 6000, 'application/pdf'),
+            ],
+        ]))->assertSessionHasErrors(['photos.0', 'photos.1']);
+
+        $this->assertSame(0, CorrectiveAction::count());
+    }
+
     public function test_an_action_takes_at_most_three_photos(): void
     {
         $this->actingAs(User::factory()->create());

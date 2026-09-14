@@ -13,6 +13,8 @@ use Inertia\Response;
 
 class MishapController extends Controller
 {
+    private const PER_PAGE = 15;
+
     public function index(Request $request): Response
     {
         // Only ~hundreds of rows: derive the year list in PHP so it works the
@@ -32,10 +34,7 @@ class MishapController extends Controller
             'search' => trim((string) $request->input('search')) ?: null,
         ];
 
-        $mishaps = Mishap::query()
-            ->with('correctiveActions')
-            ->withCount('correctiveActions')
-            ->latestFirst()
+        $filtered = fn () => Mishap::query()
             ->when($filters['year'], fn ($q, $year) => $q->forYear($year))
             ->when($filters['type'], fn ($q, $type) => $q->where('mishap_type', $type))
             ->when($filters['environment'], fn ($q, $env) => $q->where('environment', $env))
@@ -43,14 +42,32 @@ class MishapController extends Controller
             ->when($filters['search'], fn ($q, $term) => $q->where(
                 fn ($w) => $w->where('description', 'like', "%{$term}%")
                     ->orWhere('location', 'like', "%{$term}%"),
-            ))
-            ->paginate(15)
+            ));
+
+        // ?focus={id} (links from the dashboard / forecast): open the page that
+        // holds that record so the table can scroll to and highlight its row.
+        $focus = $request->integer('focus') ?: null;
+        $page = null;
+        if ($focus && ! $request->has('page') && ($target = $filtered()->find($focus))) {
+            $date = $target->getRawOriginal('mishap_date');
+            $before = $filtered()->where(fn ($q) => $q->where('mishap_date', '>', $date)
+                ->orWhere(fn ($same) => $same->where('mishap_date', $date)->where('id', '>', $target->id)))
+                ->count();
+            $page = intdiv($before, self::PER_PAGE) + 1;
+        }
+
+        $mishaps = $filtered()
+            ->with('correctiveActions')
+            ->withCount('correctiveActions')
+            ->latestFirst()
+            ->paginate(self::PER_PAGE, ['*'], 'page', $page)
             ->withQueryString()
             ->through(fn (Mishap $m) => $this->present($m));
 
         return Inertia::render('Mishaps/Index', [
             'mishaps' => $mishaps,
             'filters' => $filters,
+            'focus' => $focus,
             'years' => $years,
             'options' => [
                 'types' => Mishap::TYPES,

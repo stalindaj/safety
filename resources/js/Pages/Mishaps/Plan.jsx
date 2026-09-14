@@ -38,10 +38,23 @@ async function shrinkPhoto(file) {
     }
 }
 
-function Thumb({ src, alt, onRemove }) {
+const MAX_FILE_MB = 5;
+const isPdfFile = (f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+
+// A PDF has no picture to preview: show a document tile with its name instead.
+function PdfTile({ name, className = '' }) {
+    return (
+        <div className={`flex h-full w-full flex-col items-center justify-center gap-1 bg-rose-50 p-2 text-center ${className}`}>
+            <span className="rounded bg-rose-600 px-1.5 py-0.5 font-mono text-[0.6rem] font-bold tracking-wider text-white">PDF</span>
+            <span className="line-clamp-2 text-[0.65rem] leading-tight break-all text-slate-600">{name}</span>
+        </div>
+    );
+}
+
+function Thumb({ src, alt, pdf, onRemove }) {
     return (
         <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-slate-100 ring-1 ring-slate-200">
-            <img src={src} alt={alt} className="h-full w-full object-cover" />
+            {pdf ? <PdfTile name={alt} /> : <img src={src} alt={alt} className="h-full w-full object-cover" />}
             <button
                 type="button"
                 onClick={onRemove}
@@ -73,30 +86,35 @@ function EntryForm({ mishapId, entry, statuses, maxProofs, onDone }) {
         remarks: entry?.remarks ?? '',
     });
     const [preparing, setPreparing] = useState(false);
+    const [fileError, setFileError] = useState(null);
 
     const kept = existing.filter((p) => !data.remove_photos.includes(p.id));
     const photoCount = kept.length + data.photos.length;
     const canComply = photoCount > 0;
     const room = maxProofs - photoCount;
 
-    const previews = useMemo(() => data.photos.map((f) => URL.createObjectURL(f)), [data.photos]);
-    useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
+    const previews = useMemo(() => data.photos.map((f) => (isPdfFile(f) ? null : URL.createObjectURL(f))), [data.photos]);
+    useEffect(() => () => previews.forEach((u) => u && URL.revokeObjectURL(u)), [previews]);
 
     const addPhotos = async (e) => {
         const picked = Array.from(e.target.files ?? []).slice(0, room);
         e.target.value = '';
         if (!picked.length) return;
         setPreparing(true);
-        const shrunk = await Promise.all(picked.map(shrinkPhoto));
+        // Photos are shrunk in the browser; PDFs go up as they are, so check their size here.
+        const prepared = await Promise.all(picked.map((f) => (isPdfFile(f) ? f : shrinkPhoto(f))));
         setPreparing(false);
-        setData((d) => ({ ...d, photos: [...d.photos, ...shrunk].slice(0, maxProofs) }));
+        const tooBig = prepared.filter((f) => f.size > MAX_FILE_MB * 1024 * 1024);
+        setFileError(tooBig.length ? `${tooBig.map((f) => f.name).join(', ')}: over ${MAX_FILE_MB} MB. Save a smaller PDF (or a photo) and try again.` : null);
+        const ok = prepared.filter((f) => f.size <= MAX_FILE_MB * 1024 * 1024);
+        setData((d) => ({ ...d, photos: [...d.photos, ...ok].slice(0, maxProofs) }));
     };
 
     const photoErrors = Object.entries(errors)
         .filter(([k]) => k === 'photos' || k.startsWith('photos.'))
         .map(([, v]) => v);
     const statusError = errors.status
-        ?? (data.status === 'complied' && !canComply ? 'Attach at least one proof photo to mark this Complied.' : null);
+        ?? (data.status === 'complied' && !canComply ? 'Attach at least one proof (photo or PDF) to mark this Complied.' : null);
 
     const submit = (e) => {
         e.preventDefault();
@@ -152,18 +170,19 @@ function EntryForm({ mishapId, entry, statuses, maxProofs, onDone }) {
 
             <fieldset className="rounded-lg border border-slate-200 px-4 pt-2 pb-4">
                 <legend className="label-mono !text-navy-800 px-1 font-semibold">Proof / Intervention</legend>
-                <p className="mb-3 text-xs text-slate-500">What was actually done, with up to {maxProofs} photos as proof. Complied is only allowed once a photo is attached.</p>
+                <p className="mb-3 text-xs text-slate-500">What was actually done, with up to {maxProofs} photos or PDFs as proof. Complied is only allowed once a proof is attached.</p>
                 <Field label="What was done" error={errors.intervention}>
                     <textarea className="field min-h-16" placeholder="e.g. Safety seminar held 12 Sep 2026 at the Wing conference room, 45 attendees" value={data.intervention} onChange={(e) => setData('intervention', e.target.value)} />
                 </Field>
                 <div className="mt-4">
-                    <span className="label-mono mb-1.5 block">Photos ({photoCount} of {maxProofs})</span>
+                    <span className="label-mono mb-1.5 block">Photos / PDF ({photoCount} of {maxProofs})</span>
                     <div className="grid grid-cols-3 gap-3">
                         {kept.map((p) => (
                             <Thumb
                                 key={`saved-${p.id}`}
                                 src={p.url}
-                                alt={p.name ?? 'Proof photo'}
+                                alt={p.name ?? 'Proof'}
+                                pdf={p.kind === 'pdf'}
                                 onRemove={() => setData('remove_photos', [...data.remove_photos, p.id])}
                             />
                         ))}
@@ -172,6 +191,7 @@ function EntryForm({ mishapId, entry, statuses, maxProofs, onDone }) {
                                 key={`new-${i}-${f.name}`}
                                 src={previews[i]}
                                 alt={f.name}
+                                pdf={isPdfFile(f)}
                                 onRemove={() => setData('photos', data.photos.filter((_, j) => j !== i))}
                             />
                         ))}
@@ -182,15 +202,16 @@ function EntryForm({ mishapId, entry, statuses, maxProofs, onDone }) {
                                     className="flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-slate-300 text-center transition hover:border-gold-400 hover:bg-gold-50 focus-within:border-gold-500"
                                 >
                                     <span className="text-2xl leading-none text-slate-400">+</span>
-                                    <span className="label-mono">{preparing ? 'Preparing…' : 'Add photo'}</span>
-                                    <input type="file" accept="image/*" multiple className="sr-only" onChange={addPhotos} disabled={preparing} />
+                                    <span className="label-mono">{preparing ? 'Preparing…' : 'Add photo or PDF'}</span>
+                                    <input type="file" accept="image/*,application/pdf,.pdf" multiple className="sr-only" onChange={addPhotos} disabled={preparing} />
                                 </label>
                             ) : (
                                 <div key={`empty-${i}`} className="aspect-[4/3] rounded-md border border-dashed border-slate-200 bg-slate-50" />
                             ),
                         )}
                     </div>
-                    <p className="mt-1.5 text-xs text-slate-500">e.g. seminar photo, attendance sheet, signed memo. Large photos are shrunk before upload.</p>
+                    <p className="mt-1.5 text-xs text-slate-500">e.g. seminar photo, attendance sheet, signed memo (PDF). Up to {MAX_FILE_MB} MB each; large photos are shrunk before upload.</p>
+                    {fileError && <span className="mt-1 block text-xs text-rose-600">{fileError}</span>}
                     {photoErrors.map((msg, i) => (
                         <span key={i} className="mt-1 block text-xs text-rose-600">{msg}</span>
                     ))}
@@ -202,7 +223,7 @@ function EntryForm({ mishapId, entry, statuses, maxProofs, onDone }) {
                     <select className="field" value={data.status} onChange={(e) => setData('status', e.target.value)}>
                         {statuses.map((s) => (
                             <option key={s} value={s} disabled={s === 'complied' && !canComply}>
-                                {`${STATUS[s]?.label ?? cap(s)}${s === 'complied' && !canComply ? ' (needs a proof photo)' : ''}`}
+                                {`${STATUS[s]?.label ?? cap(s)}${s === 'complied' && !canComply ? ' (needs a proof)' : ''}`}
                             </option>
                         ))}
                     </select>
@@ -230,7 +251,7 @@ export default function Plan({ mishap, entries, statuses, max_proofs: maxProofs 
     const compliedNoProof = entries.filter((e) => e.status === 'complied' && e.proofs.length === 0).length;
 
     const remove = (entry) => {
-        if (window.confirm('Remove this corrective action and its proof photos?')) {
+        if (window.confirm('Remove this corrective action and its proof files?')) {
             router.delete(`/corrective-actions/${entry.id}`, { preserveScroll: true });
         }
     };
@@ -344,9 +365,13 @@ export default function Plan({ mishap, entries, statuses, max_proofs: maxProofs 
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         className="block h-16 w-24 overflow-hidden rounded ring-1 ring-slate-200 transition hover:ring-gold-400"
-                                                        title="Open full photo"
+                                                        title={p.kind === 'pdf' ? `Open ${p.name ?? 'PDF'}` : 'Open full photo'}
                                                     >
-                                                        <img src={p.url} alt={p.name ?? 'Proof photo'} loading="lazy" className="h-full w-full object-cover" />
+                                                        {p.kind === 'pdf' ? (
+                                                            <PdfTile name={p.name ?? 'Proof.pdf'} />
+                                                        ) : (
+                                                            <img src={p.url} alt={p.name ?? 'Proof photo'} loading="lazy" className="h-full w-full object-cover" />
+                                                        )}
                                                     </a>
                                                 ))}
                                             </div>

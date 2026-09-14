@@ -72,13 +72,16 @@ class CorrectiveActionController extends Controller
         return back()->with('success', 'Corrective action removed.');
     }
 
-    /** Proof photos sit outside public/, so they're streamed to signed-in users only. */
+    /** Proof files sit outside public/, so they're streamed to signed-in users only (PDFs open in the browser). */
     public function photo(CorrectiveActionProof $proof): StreamedResponse
     {
         $disk = Storage::disk(CorrectiveActionProof::DISK);
         abort_unless($disk->exists($proof->path), 404);
 
-        return $disk->response($proof->path, $proof->original_name, ['Cache-Control' => 'private, max-age=86400']);
+        return $disk->response($proof->path, $proof->original_name, [
+            'Cache-Control' => 'private, max-age=86400',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     /** @return array<string, mixed> */
@@ -96,17 +99,19 @@ class CorrectiveActionController extends Controller
             'staff_action' => ['nullable', 'string'],
             'intervention' => ['nullable', 'string'],
             'photos' => ['nullable', 'array', 'max:'.CorrectiveAction::MAX_PROOFS],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            // Photos or PDFs (e.g. a scanned signed memo). 5 MB each keeps three files
+            // under the host's post_max_size (20M).
+            'photos.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'remove_photos' => ['nullable', 'array'],
             'remove_photos.*' => ['integer'],
             'status' => ['required', Rule::in(CorrectiveAction::STATUSES)],
             'remarks' => ['nullable', 'string'],
         ], [
             'follow_up_contact.regex' => 'Use digits only, e.g. 0917 123 4567.',
-            'photos.max' => 'Attach up to '.CorrectiveAction::MAX_PROOFS.' proof photos.',
-            'photos.*.image' => 'Proof must be a photo (JPG, PNG or WebP).',
-            'photos.*.mimes' => 'Proof must be a photo (JPG, PNG or WebP).',
-            'photos.*.max' => 'Each photo must be 5 MB or smaller.',
+            'photos.max' => 'Attach up to '.CorrectiveAction::MAX_PROOFS.' proof files.',
+            'photos.*.file' => 'Proof must be a photo (JPG, PNG or WebP) or a PDF.',
+            'photos.*.mimes' => 'Proof must be a photo (JPG, PNG or WebP) or a PDF.',
+            'photos.*.max' => 'Each file must be 5 MB or smaller.',
         ]);
 
         // Photos that will be on file once this save goes through.
@@ -115,14 +120,14 @@ class CorrectiveActionController extends Controller
 
         if ($total > CorrectiveAction::MAX_PROOFS) {
             throw ValidationException::withMessages([
-                'photos' => 'Attach up to '.CorrectiveAction::MAX_PROOFS.' proof photos.',
+                'photos' => 'Attach up to '.CorrectiveAction::MAX_PROOFS.' proof files.',
             ]);
         }
 
         // No proof, no compliance.
         if ($data['status'] === CorrectiveAction::COMPLIED && $total === 0) {
             throw ValidationException::withMessages([
-                'status' => 'Attach at least one proof photo before marking this action Complied.',
+                'status' => 'Attach at least one proof (photo or PDF) before marking this action Complied.',
             ]);
         }
 
@@ -165,6 +170,7 @@ class CorrectiveActionController extends Controller
                 'id' => $p->id,
                 'url' => route('cap-proofs.show', $p, false),
                 'name' => $p->original_name,
+                'kind' => $p->isPdf() ? 'pdf' : 'image',
             ])->values(),
             'status' => $c->status,
             'remarks' => $c->remarks,
