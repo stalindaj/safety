@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\CapsController;
 use App\Http\Controllers\CorrectiveActionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExternalOccurrenceController;
@@ -21,6 +22,9 @@ Route::post('/logout', [SessionController::class, 'destroy'])
 
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+
+    // CAPS follow-through — every mishap's corrective actions, by year and by unit.
+    Route::get('/caps', CapsController::class)->name('caps');
 
     // Safety Forecast — weekly base rate (notebook) + Predictive Safety Forecast.
     Route::get('/forecast', ForecastController::class)->name('forecast');

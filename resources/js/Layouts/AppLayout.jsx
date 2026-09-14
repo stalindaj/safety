@@ -1,10 +1,11 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import ThemeToggle from '@/Components/ThemeToggle';
-import { AlertIcon, AnalyticsIcon, HomeIcon, LogoutIcon, UserIcon } from '@/Components/Icons';
+import { AlertIcon, AnalyticsIcon, AttendanceIcon, HomeIcon, LogoutIcon, UserIcon } from '@/Components/Icons';
 
 const NAV = [
     { href: '/', label: 'Dashboard', icon: HomeIcon, match: (p) => p === '/' },
+    { href: '/caps', label: 'CAPS', icon: AttendanceIcon },
     { href: '/forecast', label: 'Forecast', icon: AnalyticsIcon },
     { href: '/mishaps', label: 'Mishap Records', icon: AlertIcon },
 ];

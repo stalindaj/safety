@@ -1,21 +1,21 @@
 {
-  "_AppLayout-Dm3DU8Cm.js": {
-    "file": "assets/AppLayout-Dm3DU8Cm.js",
+  "_AppLayout-BP1Fs056.js": {
+    "file": "assets/AppLayout-BP1Fs056.js",
     "name": "AppLayout",
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-Bev_noua.js"
+      "_Ui-BUZO7SRy.js"
     ]
   },
-  "_LineChart-d5m4u6FC.js": {
-    "file": "assets/LineChart-d5m4u6FC.js",
+  "_LineChart-zEBkQI9t.js": {
+    "file": "assets/LineChart-zEBkQI9t.js",
     "name": "LineChart",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_Ui-Bev_noua.js": {
-    "file": "assets/Ui-Bev_noua.js",
+  "_Ui-BUZO7SRy.js": {
+    "file": "assets/Ui-BUZO7SRy.js",
     "name": "Ui",
     "imports": [
       "resources/js/app.jsx"
@@ -31,98 +31,113 @@
     ]
   },
   "resources/js/Pages/Account/Edit.jsx": {
-    "file": "assets/Edit-BlMm3dXI.js",
+    "file": "assets/Edit-R5emWBBW.js",
     "name": "Edit",
     "src": "resources/js/Pages/Account/Edit.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-Dm3DU8Cm.js",
-      "_Ui-Bev_noua.js"
+      "_AppLayout-BP1Fs056.js",
+      "_Ui-BUZO7SRy.js"
     ],
     "css": [
       "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Auth/Login.jsx": {
-    "file": "assets/Login-DAeUKm7Z.js",
+    "file": "assets/Login-LEaYmpW3.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-Bev_noua.js"
+      "_Ui-BUZO7SRy.js"
+    ],
+    "css": [
+      "assets/app-B7fw6DyK.css"
+    ]
+  },
+  "resources/js/Pages/Caps.jsx": {
+    "file": "assets/Caps-DnHaybgD.js",
+    "name": "Caps",
+    "src": "resources/js/Pages/Caps.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-BP1Fs056.js",
+      "_Ui-BUZO7SRy.js"
     ],
     "css": [
       "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-IQoAxVPZ.js",
+    "file": "assets/Dashboard-BbAxUszH.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Dashboard.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-Dm3DU8Cm.js",
-      "_Ui-Bev_noua.js",
-      "_LineChart-d5m4u6FC.js"
+      "_AppLayout-BP1Fs056.js",
+      "_Ui-BUZO7SRy.js",
+      "_LineChart-zEBkQI9t.js"
     ],
     "css": [
       "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Forecast.jsx": {
-    "file": "assets/Forecast-6_iG3YmN.js",
+    "file": "assets/Forecast-C0BNh94R.js",
     "name": "Forecast",
     "src": "resources/js/Pages/Forecast.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-Dm3DU8Cm.js",
-      "_Ui-Bev_noua.js",
-      "_LineChart-d5m4u6FC.js"
+      "_AppLayout-BP1Fs056.js",
+      "_Ui-BUZO7SRy.js",
+      "_LineChart-zEBkQI9t.js"
     ],
     "css": [
       "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Mishaps/Index.jsx": {
-    "file": "assets/Index-CnimjbYF.js",
+    "file": "assets/Index-nhvLRDXb.js",
     "name": "Index",
     "src": "resources/js/Pages/Mishaps/Index.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-Dm3DU8Cm.js",
-      "_Ui-Bev_noua.js"
+      "_AppLayout-BP1Fs056.js",
+      "_Ui-BUZO7SRy.js"
     ],
     "css": [
       "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/Pages/Mishaps/Plan.jsx": {
-    "file": "assets/Plan-npmQPU6E.js",
+    "file": "assets/Plan-C1zXIndt.js",
     "name": "Plan",
     "src": "resources/js/Pages/Mishaps/Plan.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-Dm3DU8Cm.js",
-      "_Ui-Bev_noua.js"
+      "_AppLayout-BP1Fs056.js",
+      "_Ui-BUZO7SRy.js"
     ],
     "css": [
       "assets/app-B7fw6DyK.css"
     ]
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-B2hW_5Ch.js",
+    "file": "assets/app-B1yKwqPo.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
     "dynamicImports": [
       "resources/js/Pages/Account/Edit.jsx",
       "resources/js/Pages/Auth/Login.jsx",
+      "resources/js/Pages/Caps.jsx",
       "resources/js/Pages/Dashboard.jsx",
       "resources/js/Pages/Forecast.jsx",
       "resources/js/Pages/Mishaps/Index.jsx",
