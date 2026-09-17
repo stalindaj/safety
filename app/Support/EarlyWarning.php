@@ -5,6 +5,8 @@ namespace App\Support;
 use App\Models\ExternalOccurrence;
 use App\Models\Mishap;
 use App\Models\SafetyForecast;
+use App\Models\WatcherReport;
+use App\Support\News\NewsWatcher;
 use Illuminate\Support\Carbon;
 
 /**
@@ -20,14 +22,23 @@ class EarlyWarning
     /** Area the Wing asked to watch first. */
     public const PRIORITY_REGION = 'mindanao';
 
+    /** Similar occurrences within this many days make a pattern. */
+    public const PATTERN_DAYS = 14;
+
     /** @return array<string, mixed> */
     public static function build(): array
     {
+        $weather = AirfieldWeather::snapshot();
+
         return [
-            'odds' => self::odds(),
-            'weather' => AirfieldWeather::snapshot(),
+            // Base chances from the record, adjusted by this week's conditions.
+            'odds' => ChanceModel::adjust(self::odds(), $weather),
+            'weather' => $weather,
             'season' => self::season(),
             'external' => self::external(),
+            'weather_link' => self::weatherLink(),
+            'patterns' => self::patterns(),
+            'news' => NewsWatcher::panel(),
             'options' => [
                 'regions' => ExternalOccurrence::REGIONS,
                 'categories' => ExternalOccurrence::categories(),
@@ -53,22 +64,13 @@ class EarlyWarning
             return [];
         }
 
-        $month = (int) $today->month;
-        $birdWindow = match (true) {
-            in_array($month, [9, 10, 11], true) => ['Sep–Nov', [9, 10, 11]],
-            in_array($month, [2, 3, 4, 5], true) => ['Feb–May', [2, 3, 4, 5]],
-            default => null,
-        };
-
-        $since = Carbon::parse(Mishap::query()->min('mishap_date'))->year;
-
+        // All three start from the same 5 years; the time of year is now a
+        // factor in ChanceModel rather than baked into the bird chance.
         return [
             'period' => 'last 5 years',
             'flight_week' => self::share($weeks, fn ($w) => $w['flight']),
             'any_week' => self::share($weeks, fn ($w) => $w['any']),
-            'bird_week' => $birdWindow
-                ? self::seasonal($birdWindow[1], 'bird') + ['label' => "{$birdWindow[0]} weeks since {$since}"]
-                : self::share($weeks, fn ($w) => $w['bird']) + ['label' => 'last 5 years'],
+            'bird_week' => self::share($weeks, fn ($w) => $w['bird']),
         ];
     }
 
@@ -118,7 +120,19 @@ class EarlyWarning
             'level' => $chance['verdict'] === 'higher than usual' ? 'brief' : 'aware',
         ];
 
-        // El Niño / La Niña status comes from the weekly notebook update (NOAA index).
+        // El Niño / La Niña: NOAA's index directly; the weekly notebook update is the fallback.
+        if ($enso = Enso::latest()) {
+            $items[] = [
+                'text' => $enso['state'] === 'neutral'
+                    ? sprintf('ENSO-neutral (ONI %+.1f)', $enso['anomaly'])
+                    : sprintf('%s, %s (ONI %+.1f)', Enso::label($enso['state']), Enso::strength($enso['anomaly']), $enso['anomaly']),
+                'detail' => "NOAA Oceanic Niño Index for {$enso['season']}. "
+                    .($enso['state'] === 'el_nino' ? 'Drier, hazier air and more wind shear.' : ($enso['state'] === 'la_nina' ? 'Wetter, more storms.' : 'No strong ocean signal.')),
+                'level' => $enso['state'] === 'neutral' ? 'info' : 'aware',
+            ];
+
+            return $items;
+        }
         $week = SafetyForecast::query()->whereNull('base')
             ->whereDate('week_start', $today->copy()->startOfWeek()->toDateString())->first();
         foreach ($week?->reasons ?? [] as $reason) {
@@ -141,16 +155,13 @@ class EarlyWarning
     {
         $today ??= now('Asia/Manila')->startOfDay();
         $fleet = array_map([self::class, 'normalise'], Mishap::AIRCRAFT);
-        $topCauses = Mishap::query()
-            ->where('environment', Mishap::FLIGHT)
-            ->whereNotNull('category')->where('category', '!=', HazardClassifier::OTHER)
-            ->selectRaw('category, count(*) as c')->groupBy('category')->orderByDesc('c')
-            ->limit(3)->pluck('category')->all();
+        $topCauses = self::topCauses();
 
         $rank = ['brief' => 0, 'aware' => 1, 'info' => 2];
 
         return ExternalOccurrence::query()
             ->whereDate('brief_until', '>=', $today->copy()->subDays(90)->toDateString())
+            ->with('newsDetection:id,external_occurrence_id,auto')
             ->orderByDesc('occurred_on')->get()
             ->map(function (ExternalOccurrence $o) use ($fleet, $topCauses, $today) {
                 $why = [];
@@ -179,6 +190,8 @@ class EarlyWarning
                     'display_until' => $o->brief_until->format('d M'),
                     'active' => $o->brief_until->gte($today),
                     'why' => $why,
+                    // Logged by the news watcher on its own (not typed in by staff).
+                    'from_news' => $o->newsDetection !== null && $o->created_by === null,
                     'level' => count($why) >= 2 ? 'brief' : (count($why) === 1 ? 'aware' : 'info'),
                 ];
             })
@@ -187,12 +200,61 @@ class EarlyWarning
     }
 
     /**
+     * The watcher notebook's weather check: how often each hazard was present
+     * on the Wing's mishap days vs ordinary days at the same airfields, and the
+     * weather at the time of the latest mishaps. Null until the notebook runs.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function weatherLink(int $recent = 6): ?array
+    {
+        $report = WatcherReport::query()->firstWhere('kind', WatcherReport::WEATHER_LINK);
+        if (! $report) {
+            return null;
+        }
+
+        $latest = Mishap::query()->with('weather')->latestFirst()->limit($recent)->get()
+            ->map(fn (Mishap $m) => [
+                'id' => $m->id,
+                'year' => (int) $m->mishap_date->format('Y'),
+                'display_date' => $m->mishap_date->format('d M Y'),
+                'time' => $m->mishap_time,
+                'location' => $m->location,
+                'environment' => $m->environment,
+                'category' => $m->category,
+                'aircraft' => $m->aircraft,
+                'weather' => $m->weather ? [
+                    'level' => $m->weather->level,
+                    'hazards' => $m->weather->hazards,
+                    'source' => $m->weather->source,
+                    'station' => $m->weather->station,
+                    'station_name' => $m->weather->station_name,
+                    'distance_km' => $m->weather->distance_km,
+                    'window' => $m->weather->window,
+                    'note' => $m->weather->note,
+                ] : null,
+            ]);
+
+        $payload = $report->payload;
+        // The gusts row was removed from the table (gusts still count inside
+        // "Any brief-level weather"); older notebook copies may still send it.
+        $payload['rows'] = collect($payload['rows'] ?? [])
+            ->reject(fn ($r) => str_starts_with((string) ($r['hazard'] ?? ''), 'Gusts'))
+            ->values()->all();
+
+        return $payload + [
+            'recent' => $latest->all(),
+            'updated' => $report->generated_at?->timezone('Asia/Manila')->format('d M Y'),
+        ];
+    }
+
+    /**
      * Completed Monday-to-Sunday weeks from $from (or the first record) up to
      * the week before $thisWeek, each flagged for what happened in it.
      *
      * @return list<array{start: Carbon, flight: bool, any: bool, bird: bool}>
      */
-    private static function weeks(Carbon $thisWeek, ?Carbon $from = null): array
+    public static function weeks(Carbon $thisWeek, ?Carbon $from = null): array
     {
         $records = Mishap::query()->get(['mishap_date', 'environment', 'category']);
         if ($records->isEmpty()) {
@@ -263,6 +325,83 @@ class EarlyWarning
                 default => 'lower than usual',
             },
         ];
+    }
+
+    /**
+     * The Wing's three most common flight-mishap categories.
+     *
+     * @return list<string>
+     */
+    public static function topCauses(): array
+    {
+        return Mishap::query()
+            ->where('environment', Mishap::FLIGHT)
+            ->whereNotNull('category')->where('category', '!=', HazardClassifier::OTHER)
+            ->selectRaw('category, count(*) as c')->groupBy('category')->orderByDesc('c')
+            ->limit(3)->pluck('category')->all();
+    }
+
+    /**
+     * Pattern alerts: two or more similar occurrences, ours or outside, within
+     * PATTERN_DAYS. "Similar" = the same hazard category or the same aircraft
+     * type. Brief crews when the run includes a Wing mishap, Mindanao, or one
+     * of our aircraft types; otherwise be aware. Similar is not the same cause.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function patterns(?Carbon $today = null): array
+    {
+        $today ??= now('Asia/Manila')->startOfDay();
+        $from = $today->copy()->subDays(self::PATTERN_DAYS - 1)->toDateString();
+        $fleet = collect(Mishap::AIRCRAFT)->keyBy(fn ($a) => self::normalise($a));
+
+        $events = collect();
+        foreach (Mishap::query()->where('environment', Mishap::FLIGHT)->whereDate('mishap_date', '>=', $from)->get() as $m) {
+            $events->push(['who' => '15SW', 'date' => $m->mishap_date, 'place' => $m->location, 'category' => $m->category,
+                'aircraft' => $m->aircraft, 'mindanao' => false, 'wing' => true]);
+        }
+        foreach (ExternalOccurrence::query()->whereDate('occurred_on', '>=', $from)->get() as $o) {
+            $type = $o->aircraft ? $fleet->get(self::normalise($o->aircraft)) : null;
+            $events->push(['who' => 'Outside', 'date' => $o->occurred_on, 'place' => $o->location, 'category' => $o->category,
+                'aircraft' => $type, 'mindanao' => $o->region === self::PRIORITY_REGION, 'wing' => false]);
+        }
+
+        $groups = [];
+        foreach ($events->whereNotNull('category')->where('category', '!=', HazardClassifier::OTHER)->groupBy('category') as $category => $run) {
+            $groups[] = [fn ($n, $days) => "{$n} similar occurrences in {$days}: ".mb_strtolower($category), $run];
+        }
+        foreach ($events->whereNotNull('aircraft')->groupBy('aircraft') as $type => $run) {
+            $groups[] = [fn ($n, $days) => "{$n} occurrences on the {$type} in {$days}", $run];
+        }
+
+        $seen = [];
+        $out = [];
+        foreach ($groups as [$what, $run]) {
+            if ($run->count() < 2) {
+                continue;
+            }
+            $run = $run->sortByDesc('date')->values();
+            $key = $run->map(fn ($e) => $e['who'].$e['date']->format('Ymd').$e['place'])->sort()->implode('|');
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $wing = $run->where('wing', true)->count();
+            $close = $wing > 0 || $run->contains('mindanao', true) || $run->whereNotNull('aircraft')->isNotEmpty();
+            $span = (int) $run->last()['date']->diffInDays($run->first()['date']) + 1;
+            $out[] = [
+                'text' => $what($run->count(), $span === 1 ? '1 day' : "{$span} days"),
+                'detail' => ($wing ? "{$wing} in the Wing, ".($run->count() - $wing).' outside.' : 'All outside the Wing.')
+                    .' Similar does not mean the same cause: check whether they share one.',
+                'items' => $run->map(fn ($e) => [
+                    'who' => $e['who'], 'display_date' => $e['date']->format('d M'), 'place' => $e['place'],
+                    'category' => $e['category'], 'aircraft' => $e['aircraft'],
+                ])->all(),
+                'level' => $close ? 'brief' : 'aware',
+            ];
+        }
+
+        return collect($out)->sortBy(fn ($p) => [$p['level'] === 'brief' ? 0 : 1, -count($p['items'])])->values()->all();
     }
 
     /** "AW 109", "aw-109", "AW109" → "AW109" for matching against the fleet list. */

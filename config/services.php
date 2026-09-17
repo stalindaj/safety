@@ -40,4 +40,10 @@ return [
         'token' => env('MODEL_API_TOKEN', ''),
     ],
 
+    // News watcher: also check (after the page is sent) when the Forecast page
+    // is opened and the last check is over an hour old. The cron job is the main trigger.
+    'news_watch' => [
+        'auto' => (bool) env('NEWS_WATCH_AUTO', true),
+    ],
+
 ];

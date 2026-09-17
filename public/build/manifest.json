@@ -1,28 +1,28 @@
 {
-  "_AppLayout-BP1Fs056.js": {
-    "file": "assets/AppLayout-BP1Fs056.js",
+  "_AppLayout-DaHEZr5K.js": {
+    "file": "assets/AppLayout-DaHEZr5K.js",
     "name": "AppLayout",
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-BUZO7SRy.js"
+      "_Ui-Dr4lpYsd.js"
     ]
   },
-  "_LineChart-zEBkQI9t.js": {
-    "file": "assets/LineChart-zEBkQI9t.js",
+  "_LineChart-D5xTDkO9.js": {
+    "file": "assets/LineChart-D5xTDkO9.js",
     "name": "LineChart",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_Ui-BUZO7SRy.js": {
-    "file": "assets/Ui-BUZO7SRy.js",
+  "_Ui-Dr4lpYsd.js": {
+    "file": "assets/Ui-Dr4lpYsd.js",
     "name": "Ui",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B7fw6DyK.css",
+    "file": "assets/app-1aq1nQUq.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -31,106 +31,106 @@
     ]
   },
   "resources/js/Pages/Account/Edit.jsx": {
-    "file": "assets/Edit-R5emWBBW.js",
+    "file": "assets/Edit-BkVzAeWG.js",
     "name": "Edit",
     "src": "resources/js/Pages/Account/Edit.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BP1Fs056.js",
-      "_Ui-BUZO7SRy.js"
+      "_AppLayout-DaHEZr5K.js",
+      "_Ui-Dr4lpYsd.js"
     ],
     "css": [
-      "assets/app-B7fw6DyK.css"
+      "assets/app-1aq1nQUq.css"
     ]
   },
   "resources/js/Pages/Auth/Login.jsx": {
-    "file": "assets/Login-LEaYmpW3.js",
+    "file": "assets/Login-CnaSII-e.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_Ui-BUZO7SRy.js"
+      "_Ui-Dr4lpYsd.js"
     ],
     "css": [
-      "assets/app-B7fw6DyK.css"
+      "assets/app-1aq1nQUq.css"
     ]
   },
   "resources/js/Pages/Caps.jsx": {
-    "file": "assets/Caps-DnHaybgD.js",
+    "file": "assets/Caps-CbdEgGVn.js",
     "name": "Caps",
     "src": "resources/js/Pages/Caps.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BP1Fs056.js",
-      "_Ui-BUZO7SRy.js"
+      "_AppLayout-DaHEZr5K.js",
+      "_Ui-Dr4lpYsd.js"
     ],
     "css": [
-      "assets/app-B7fw6DyK.css"
+      "assets/app-1aq1nQUq.css"
     ]
   },
   "resources/js/Pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-BbAxUszH.js",
+    "file": "assets/Dashboard-BLoDPpSh.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Dashboard.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BP1Fs056.js",
-      "_Ui-BUZO7SRy.js",
-      "_LineChart-zEBkQI9t.js"
+      "_AppLayout-DaHEZr5K.js",
+      "_Ui-Dr4lpYsd.js",
+      "_LineChart-D5xTDkO9.js"
     ],
     "css": [
-      "assets/app-B7fw6DyK.css"
+      "assets/app-1aq1nQUq.css"
     ]
   },
   "resources/js/Pages/Forecast.jsx": {
-    "file": "assets/Forecast-C0BNh94R.js",
+    "file": "assets/Forecast-DGSQ5P0I.js",
     "name": "Forecast",
     "src": "resources/js/Pages/Forecast.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BP1Fs056.js",
-      "_Ui-BUZO7SRy.js",
-      "_LineChart-zEBkQI9t.js"
+      "_AppLayout-DaHEZr5K.js",
+      "_Ui-Dr4lpYsd.js",
+      "_LineChart-D5xTDkO9.js"
     ],
     "css": [
-      "assets/app-B7fw6DyK.css"
+      "assets/app-1aq1nQUq.css"
     ]
   },
   "resources/js/Pages/Mishaps/Index.jsx": {
-    "file": "assets/Index-nhvLRDXb.js",
+    "file": "assets/Index-Du70-ZLD.js",
     "name": "Index",
     "src": "resources/js/Pages/Mishaps/Index.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BP1Fs056.js",
-      "_Ui-BUZO7SRy.js"
+      "_AppLayout-DaHEZr5K.js",
+      "_Ui-Dr4lpYsd.js"
     ],
     "css": [
-      "assets/app-B7fw6DyK.css"
+      "assets/app-1aq1nQUq.css"
     ]
   },
   "resources/js/Pages/Mishaps/Plan.jsx": {
-    "file": "assets/Plan-C1zXIndt.js",
+    "file": "assets/Plan-CKAXAgqs.js",
     "name": "Plan",
     "src": "resources/js/Pages/Mishaps/Plan.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "_AppLayout-BP1Fs056.js",
-      "_Ui-BUZO7SRy.js"
+      "_AppLayout-DaHEZr5K.js",
+      "_Ui-Dr4lpYsd.js"
     ],
     "css": [
-      "assets/app-B7fw6DyK.css"
+      "assets/app-1aq1nQUq.css"
     ]
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-B1yKwqPo.js",
+    "file": "assets/app-C2R31ZDJ.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
@@ -144,7 +144,7 @@
       "resources/js/Pages/Mishaps/Plan.jsx"
     ],
     "css": [
-      "assets/app-B7fw6DyK.css"
+      "assets/app-1aq1nQUq.css"
     ]
   }
 }

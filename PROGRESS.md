@@ -151,6 +151,80 @@ or base rate.** Levels: Brief crews / Be aware / No hazards / For information.
 - Needs outbound HTTPS from the host to aviationweather.gov; if blocked, the
   panel shows "couldn't be reached — not an all-clear".
 
+## Watcher step 1: weather at the time — DONE locally (2026-09-17)
+Parked in a git stash on 2026-09-15, resumed and finished 2026-09-17. Not pushed yet.
+- Optional **Time** field on mishaps (`mishap_time`, "HH:MM" PH time). Tables
+  `mishap_weather` (one row per mishap) + `watcher_reports` (one summary per kind).
+- `notebooks/safety_watcher.ipynb`: matches each Location to a place (PLACES
+  cell), picks the nearest airfield with a METAR archive (Iowa State). An airfield
+  within 50 km counts as **observed**; otherwise it uses an ERA5 model **estimate** (Open-Meteo)
+  that is not counted in the comparison. It compares hazard rates on mishap days
+  with all days at the same airfields (binomial test, under 10 days = too few). It saves
+  via `POST /api/model/weather-links` (online) or straight into the local SQLite.
+- Shown in the Predictive Safety Forecast panel (Forecast page): verdict
+  sentence, Flight / Flight + ground table, weather at the 6 latest mishaps.
+- **First result (128 mishaps, 95 observed):** bad weather on 26% of flight
+  mishap days vs 30% of ordinary days. Every hazard is "same as usual". Likely
+  because flying stops in bad weather (no exposure data to correct for this).
+- Prod needs: pull, `/setup` (new migration), then run the notebook in Colab.
+
+## Conditions contribute to the chances — DONE locally (2026-09-17)
+- `app/Support/ChanceModel.php`: the 3 tiles (flight / any / bird, base = last
+  5 years) are adjusted as base odds × factor × factor…
+  - Factors: time of year (monsoon phase; migration window for birds), El Niño /
+    La Niña (NOAA ONI via `app/Support/Enso.php`, live), airfield weather now /
+    next 24 h (likelihood ratio from the weather-watcher notebook; not used for
+    birds), and outside occurrences.
+  - Each factor is measured from the Wing's record, then shrunk toward ×1
+    (52 average weeks / 50 days of prior). The total is capped at ×0.5–×2.
+  - Outside occurrences don't count until 26 weeks of watcher history exist.
+- First result (17 Sep 2026): flight 10.3 → 8.2%, any 16.5 → 12.2%, bird
+  4.2 → 3.3%. El Niño weeks and bad-weather days have had FEWER mishaps in the
+  record (likely less flying). The page says so, and advises briefing the hazard anyway.
+- The El Niño season row now reads NOAA directly (ONI +1.8 Jun–Aug 2026, strong);
+  the notebook row is the fallback.
+
+## Watcher step 2: news watcher (automatic, trusted sources) + pattern alerts — DONE locally (2026-09-17)
+- **Sources** (`app/Support/News/Sources.php`):
+  - 9 Google News searches, plus direct RSS from CAAP, Inquirer, GMA, Philstar
+    and Rappler.
+  - **Only trusted outlets count**, in 3 tiers: official (CAAP, PNA, PIA, PAF,
+    AFP, DOTr, PCG, NTSB…), aviation safety (Aviation Herald, ASN, FlightGlobal,
+    AeroTime…), and major news (PH national newsrooms + regional wires).
+    Everything else (Facebook, Daily Mail, tabloids) is skipped.
+  - PNA, PIA and ASN block robots, and the Aviation Herald's robots.txt
+    disallows all robots, so those arrive only through Google News (not scraped).
+- `NewsReader` keeps only flying occurrences, using keyword rules: kind, place →
+  region (airline names aren't places), fleet type, military, category.
+  `quotesOfficial()` spots "PAF: …", "…, CAAP says" and "… – Caap".
+- Articles are grouped into one `news_detections` row per event: up to 10 days
+  apart for crashes, 3 days otherwise.
+- **Decided automatically** (`NewsWatcher::decide`):
+  - **Verified** = 1 official or aviation-safety source, a newsroom quoting an
+    official body, or 2 independent newsrooms.
+  - Verified and relevant (score ≥ 2, and not a plain disruption unless in
+    Mindanao) → **logged as an outside occurrence** (`created_by` null, summary
+    ends "logged automatically from …").
+  - Verified but not relevant → `info`.
+  - 1 newsroom only → `waiting`, which becomes `info` after 7 days.
+- Scoring: our type +3, Mindanao +2, PH +1, military +1, top cause +1, crash +1.
+  A nearby country adds 0.
+- Staff override: Undo (removes the automatic log), Log anyway (the form),
+  Remove on the Outside list, Give back to watcher. These set `auto=false`.
+- `RelevanceModel` (naive Bayes) trains **only on staff decisions** (5 of each
+  to start). It can hand a case to a person (`pending`) but never logs or
+  removes anything itself.
+- `EarlyWarning::patterns()`: 2+ similar occurrences (same category or fleet
+  type; Wing flight mishaps + outside occurrences) within 14 days.
+- Runs: `php artisan safety:watch-news` (hourly), the Check now button, and
+  after the Forecast page loads if the last check is 90+ min old (`NEWS_WATCH_AUTO`).
+- First sweep (45 days): 557 articles, 194 untrusted skipped, 13 events, 2
+  logged automatically (Butuan runway excursion, PAF FA-50 generator issue).
+- **Prod needs:** pull → `/setup` (2 new migrations) → cPanel **Cron Jobs**:
+  `0 * * * * /usr/local/bin/php /home/<user>/public_html/<folder>/artisan safety:watch-news`
+  (check the PHP path in cPanel). The host must reach news.google.com and the feeds.
+- Not started: storm (GDACS) watcher.
+
 ## NOT done yet / next steps
 1. **Go live on cPanel** — prepared but not executed. Plan uses subdomain/folder/
    DB all named **`safety`**. Steps: GitHub token → MySQL DB (`youruser_safety`)

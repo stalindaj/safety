@@ -29,6 +29,7 @@ function MishapForm({ mishap, options, onDone }) {
     const editing = Boolean(mishap);
     const { data, setData, post, put, processing, errors, reset } = useForm({
         mishap_date: mishap?.mishap_date ?? '',
+        mishap_time: mishap?.mishap_time ?? '',
         location: mishap?.location ?? '',
         mishap_type: mishap?.mishap_type ?? 'incident',
         environment: mishap?.environment ?? 'ground',
@@ -63,13 +64,22 @@ function MishapForm({ mishap, options, onDone }) {
 
     return (
         <form onSubmit={submit} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-[1fr_0.7fr_1.6fr]">
                 <Field label="Date of Mishap" error={errors.mishap_date}>
                     <input
                         type="date"
                         className="field"
                         value={data.mishap_date}
                         onChange={(e) => setData('mishap_date', e.target.value)}
+                    />
+                </Field>
+                <Field label="Time (optional)" error={errors.mishap_time}>
+                    <input
+                        type="time"
+                        className="field"
+                        title="Philippine time. Lets the watcher check the weather at that hour, not just that day."
+                        value={data.mishap_time}
+                        onChange={(e) => setData('mishap_time', e.target.value)}
                     />
                 </Field>
                 <Field label="Location / Place" error={errors.location}>
@@ -348,6 +358,7 @@ export default function MishapsIndex({ mishaps, filters, focus = null, years, op
                                     >
                                         <td className="px-3 py-2.5 font-mono text-xs whitespace-nowrap text-navy-800">
                                             {m.display_date}
+                                            {m.mishap_time && <span className="block text-slate-400">{m.mishap_time}</span>}
                                         </td>
                                         <td className="px-3 py-2.5 text-sm text-navy-900">{m.location ?? '—'}</td>
                                         <td className="px-3 py-2.5">

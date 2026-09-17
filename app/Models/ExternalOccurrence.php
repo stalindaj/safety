@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\HazardClassifier;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /** An occurrence outside the Wing, logged as an early-warning advisory. */
 class ExternalOccurrence extends Model
@@ -12,6 +13,7 @@ class ExternalOccurrence extends Model
         'mindanao' => 'Mindanao',
         'visayas' => 'Visayas',
         'luzon' => 'Luzon',
+        'philippines' => 'Philippines (area not stated)',
         'outside' => 'Outside the Philippines',
     ];
 
@@ -26,6 +28,12 @@ class ExternalOccurrence extends Model
             'occurred_on' => 'date',
             'brief_until' => 'date',
         ];
+    }
+
+    /** The news event this was logged from, if any. */
+    public function newsDetection(): HasOne
+    {
+        return $this->hasOne(NewsDetection::class);
     }
 
     /** @return list<string> */

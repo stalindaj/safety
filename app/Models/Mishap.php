@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\MishapFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Mishap extends Model
 {
-    /** @use HasFactory<\Database\Factories\MishapFactory> */
+    /** @use HasFactory<MishapFactory> */
     use HasFactory;
 
     public const ACCIDENT = 'accident';
@@ -63,6 +65,12 @@ class Mishap extends Model
     public function correctiveActions(): HasMany
     {
         return $this->hasMany(CorrectiveAction::class)->orderBy('sort_order');
+    }
+
+    /** Weather at the time and place, from the watcher notebook. */
+    public function weather(): HasOne
+    {
+        return $this->hasOne(MishapWeather::class);
     }
 
     /** Newest first — the order the records table expects. */

@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExternalOccurrenceController;
 use App\Http\Controllers\ForecastController;
 use App\Http\Controllers\MishapController;
+use App\Http\Controllers\NewsDetectionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SetupController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/external-occurrences', [ExternalOccurrenceController::class, 'store'])->name('external-occurrences.store');
     Route::put('/external-occurrences/{externalOccurrence}', [ExternalOccurrenceController::class, 'update'])->name('external-occurrences.update');
     Route::delete('/external-occurrences/{externalOccurrence}', [ExternalOccurrenceController::class, 'destroy'])->name('external-occurrences.destroy');
+
+    // News watcher — check now, and dismiss / restore detections (confirm goes through the form above).
+    Route::post('/news-watch/check', [NewsDetectionController::class, 'check'])->middleware('throttle:6,1')->name('news-watch.check');
+    Route::post('/news-detections/{newsDetection}/dismiss', [NewsDetectionController::class, 'dismiss'])->name('news-detections.dismiss');
+    Route::post('/news-detections/{newsDetection}/restore', [NewsDetectionController::class, 'restore'])->name('news-detections.restore');
 
     // Account — change your own password.
     Route::get('/account', [ProfileController::class, 'edit'])->name('account.edit');

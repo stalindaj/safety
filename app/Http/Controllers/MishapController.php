@@ -109,6 +109,7 @@ class MishapController extends Controller
     {
         $data = $request->validate([
             'mishap_date' => ['required', 'date'],
+            'mishap_time' => ['nullable', 'date_format:H:i'],
             'location' => ['nullable', 'string', 'max:190'],
             'mishap_type' => ['required', Rule::in(Mishap::TYPES)],
             'environment' => ['required', Rule::in(Mishap::ENVIRONMENTS)],
@@ -151,6 +152,7 @@ class MishapController extends Controller
             'id' => $m->id,
             'mishap_date' => $m->mishap_date->format('Y-m-d'),
             'display_date' => $m->mishap_date->format('d M Y'),
+            'mishap_time' => $m->mishap_time,
             'location' => $m->location,
             'mishap_type' => $m->mishap_type,
             'environment' => $m->environment,

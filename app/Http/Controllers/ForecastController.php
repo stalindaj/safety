@@ -6,9 +6,12 @@ use App\Models\CorrectiveAction;
 use App\Models\Mishap;
 use App\Models\SafetyForecast;
 use App\Support\EarlyWarning;
+use App\Support\News\NewsWatcher;
 use App\Support\SafetyPerformanceIndicator;
 use Inertia\Inertia;
 use Inertia\Response;
+
+use function Illuminate\Support\defer;
 
 /**
  * The Safety Forecast page: the weekly base rate written by the Colab
@@ -27,6 +30,12 @@ class ForecastController extends Controller
                 'description', 'lesson_learned']);
 
         $years = $all->map(fn (Mishap $m) => (int) $m->mishap_date->format('Y'))->unique()->sort()->values();
+
+        // Backup for the cron job: if the news hasn't been checked in the last
+        // hour, check after this page is sent, so it never slows the page down.
+        if (config('services.news_watch.auto') && NewsWatcher::due()) {
+            defer(fn () => NewsWatcher::run(), 'news-watcher');
+        }
 
         // The whole wing-wide series, so the week-changer works client-side.
         $forecasts = SafetyForecast::query()

@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\ExternalOccurrence;
 use App\Models\Mishap;
+use App\Models\MishapWeather;
 use App\Models\User;
+use App\Models\WatcherReport;
 use App\Support\AirfieldWeather;
 use App\Support\EarlyWarning;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,6 +71,36 @@ class EarlyWarningTest extends TestCase
             ->has('risk_forecasts')
             ->has('spi')
             ->where('early_warning.weather.available', false));
+    }
+
+    public function test_the_forecast_page_shows_the_weather_at_the_time_once_the_watcher_has_run(): void
+    {
+        Http::fake(['aviationweather.gov/*' => Http::response('', 503)]);
+        $this->actingAs(User::factory()->create());
+        $m = Mishap::factory()->create(['mishap_date' => '2025-09-18', 'mishap_time' => '15:10', 'location' => 'EAAB']);
+
+        // Before the notebook runs, the section is empty rather than missing.
+        $this->get('/forecast')->assertInertia(fn (AssertableInertia $page) => $page->where('early_warning.weather_link', null));
+
+        MishapWeather::create(['mishap_id' => $m->id, 'station' => 'RPMZ', 'station_name' => 'Zamboanga', 'distance_km' => 1,
+            'source' => 'observed', 'window' => 'time', 'level' => 'brief', 'reports' => 5,
+            'hazards' => [['text' => 'Thunderstorms (14:00–16:00)', 'level' => 'brief']]]);
+        WatcherReport::create(['kind' => WatcherReport::WEATHER_LINK, 'generated_at' => now(),
+            'payload' => ['period' => 'Jan 2016 – Sep 2026', 'max_distance_km' => 50, 'counts' => ['mishaps' => 1], 'unmapped' => [], 'rows' => [
+                ['group' => 'flight', 'hazard' => 'Thunderstorms', 'mishap_hits' => 13, 'mishap_days' => 54, 'mishap_pct' => 24.1, 'usual_pct' => 25.1, 'verdict' => 'same as usual'],
+                // An older notebook copy still sends this row; it is not shown.
+                ['group' => 'flight', 'hazard' => 'Gusts 25 kt or more', 'mishap_hits' => 1, 'mishap_days' => 54, 'mishap_pct' => 1.9, 'usual_pct' => 3.3, 'verdict' => 'same as usual'],
+            ]]]);
+
+        $this->get('/forecast')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('early_warning.weather_link.period', 'Jan 2016 – Sep 2026')
+            ->has('early_warning.weather_link.rows', 1)
+            ->where('early_warning.weather_link.rows.0.hazard', 'Thunderstorms')
+            ->where('early_warning.weather_link.recent.0.id', $m->id)
+            ->where('early_warning.weather_link.recent.0.year', 2025)
+            ->where('early_warning.weather_link.recent.0.time', '15:10')
+            ->where('early_warning.weather_link.recent.0.weather.level', 'brief')
+            ->where('early_warning.weather_link.recent.0.weather.window', 'time'));
     }
 
     public function test_the_dashboard_is_analytics_only(): void
@@ -159,8 +191,9 @@ class EarlyWarningTest extends TestCase
         $this->assertSame(261, $o['flight_week']['weeks']);
         $this->assertSame(1, $o['flight_week']['hits']);
         $this->assertSame(2, $o['any_week']['hits']);
-        // September is in the southbound bird window, so the bird chance is seasonal.
-        $this->assertSame('Sep–Nov weeks since 2016', $o['bird_week']['label']);
+        // Same 5 years for all three; the time of year is applied later, as a factor.
+        $this->assertSame(261, $o['bird_week']['weeks']);
+        $this->assertSame(1, $o['bird_week']['hits']);
     }
 
     public function test_the_season_uses_the_wings_own_bird_strike_history(): void
